@@ -5,6 +5,7 @@ cleanup() {
   while lsof -i:${PORT} >/dev/null; do
     echo "Waiting for process to stop..."
     sleep 1
+  done
   # Kill comfy
   kill $(lsof -t -i:8188)
   while lsof -i:8188 >/dev/null; do
@@ -59,7 +60,7 @@ while true; do
     echo "Repo is up-to-date."
   fi
   # Wait for a while before checking again
-  sleep 10
+  sleep 60
 done
 
 

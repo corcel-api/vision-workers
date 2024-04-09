@@ -56,7 +56,7 @@ while true; do
         echo "Repo is up-to-date."
     fi
     # Wait for a while before checking again
-    sleep 10
+    sleep 60
 done
 
 
