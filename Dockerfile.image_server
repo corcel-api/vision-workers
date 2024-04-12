@@ -56,7 +56,7 @@ RUN  pip install -r /app/requirements.txt
 RUN pip install huggingface_hub[hf_transfer]
 RUN rm -rf /root/.cache/pip/* 
 
-COPY image_server /app/image_server
+COPY ./ /app/
 
 ENV APP_HOST=0.0.0.0
 ENV APP_PORT=8080
@@ -65,8 +65,13 @@ ENV HF_HUB_ENABLE_HF_TRANSFER=1
 USER root
 ENV VLLM_PORT=6919
 ENV DEVICE=0
+ENV SERVER_RELOAD_GIT_TOKEN=restart_image_server
 
 RUN chmod +x /app/image_server/entrypoint.sh
 
+ARG SERVER_PORT=6919
+ENV CURRENT_SERVER_PORT=${SERVER_PORT}
+EXPOSE $CURRENT_SERVER_PORT
 
-CMD ["cd /app/image_server && ./setup.sh && /app/image_server/entrypoint.sh"]
+CMD ["bash", "-c", "cd /app/ && python run_autoupdater.py --restart_script /app/image_autoupdater_action.sh & && cd /app/image_server && ./setup.sh && /app/image_server/entrypoint.sh"]
+
