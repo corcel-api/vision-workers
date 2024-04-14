@@ -3,6 +3,7 @@ import time
 from datetime import datetime
 from pymongo import MongoClient
 from pymongo.errors import ConnectionFailure
+from pymongo.server_api import ServerApi
 
 class DatabaseClient:
     def __init__(self, uri):
@@ -10,10 +11,10 @@ class DatabaseClient:
 
     def connect_mongodb(self, uri):
         try:
-            client = MongoClient(uri, serverSelectionTimeoutMS=5000, ssl=True)  # 5 seconds timeout for testing the connection
-            client.server_info()  # Force a call to the server which will trigger a connection attempt
+            self.client = MongoClient(uri, server_api=ServerApi('1'))
+            self.client.admin.command('ping')
             print(f"[{datetime.now()}] Successfully connected to MongoDB.")
-            return client['llm_server_miners']
+            return self.client['llm_server_miners']
         except ConnectionFailure as e:
             print(f"[{datetime.now()}] MongoDB connection failed: {e}")
             exit(1)  # Exit if the connection is not successful
