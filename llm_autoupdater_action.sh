@@ -12,4 +12,4 @@ echo "Just some changes"
 echo "Just some changes"
 echo "Just some changes"
 
-/llm_server/entrypoint.sh
+pm2 start ecosystem_llm.config.js --only entrypoint

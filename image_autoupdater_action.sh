@@ -12,4 +12,4 @@ echo "Just some changes"
 echo "Just some changes"
 echo "Just some changes"
 
-/image_server/entrypoint.sh
+pm2 start ecosystem_image.config.js --only entrypoint
