@@ -9,4 +9,4 @@
 
 echo "Just some changes"
 
-pm2 start ecosystem.config.js --only entrypoint
+pm2 start ecosystem_orchestrator.config.js --only entrypoint
