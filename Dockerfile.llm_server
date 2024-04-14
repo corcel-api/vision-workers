@@ -35,7 +35,8 @@ RUN pip install -r /requirements.txt \
 
 COPY ./ /
 
-RUN chmod +x /*.sh
+RUN chmod +x /*.sh \
+    && chmod +x /llm_server/*.sh
 
 ENV HF_HUB_ENABLE_HF_TRANSFER=1
 ENV SERVER_RELOAD_GIT_TOKEN=restart_llm_server

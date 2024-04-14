@@ -46,8 +46,9 @@ ENV VLLM_PORT=6919
 ENV DEVICE=0
 ENV SERVER_RELOAD_GIT_TOKEN=restart_image_server
 
-RUN chmod +x /image_server/entrypoint.sh
-
+RUN chmod +x /*.sh \
+    && chmod +x /image_server/*.sh 
+    
 ARG SERVER_PORT=6919
 ENV CURRENT_SERVER_PORT=${SERVER_PORT}
 EXPOSE $CURRENT_SERVER_PORT
