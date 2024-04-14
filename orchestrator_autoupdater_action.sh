@@ -9,4 +9,5 @@
 
 echo "Just some changes"
 
-/validator_orchestrator/entrypoint.sh
+cd /validator_orchestrator 
+./entrypoint.sh
