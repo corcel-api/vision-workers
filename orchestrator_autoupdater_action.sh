@@ -7,6 +7,6 @@
 
 # SOME STEPS ARE COMMENTED OUT IN THIS UPDATE AS THEY ARE NOT NEEDED
 
-echo "Just some changes"
+echo "Restarting server without any action..."
 
 pm2 start ecosystem_orchestrator.config.js --only entrypoint
