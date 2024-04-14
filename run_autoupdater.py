@@ -23,22 +23,24 @@ def update_repository(target_tag):
     subprocess.run(["git", "reset", "--hard", target_tag], check=True)
     print("Repository updated to the latest tag.")
 
-def stop_server_on_port(port):
-    print("Stopping the server...")
-    try:
-        subprocess.run(f"kill $(lsof -t -i:{port})", shell=True, check=True)
-    except subprocess.CalledProcessError as e:
-        print(f"Error stopping the server: {e}")
+def stop_server_on_port(ports_to_kill):
+    for port in ports_to_kill:
+        print("Stopping the server with port {} ...".format(port))
+        try:
+            subprocess.run(f"kill $(lsof -t -i:{port})", shell=True, check=True)
+        except subprocess.CalledProcessError as e:
+            print(f"Error stopping the server: {e}")
 
-    # Wait for the port to become free
-    while True:
-        result = subprocess.run(f"lsof -i:{port}", shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        if result.returncode == 1:
-            print("Server stopped successfully.")
-            break
-        else:
-            print("Waiting for the server process to stop...")
-            time.sleep(1)
+        # Wait for the port to become free
+        while True:
+            result = subprocess.run(f"lsof -i:{port}", shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            if result.returncode == 1:
+                print("Server stopped successfully.")
+                break
+            else:
+                print("Waiting for the server process to stop...")
+                time.sleep(1)
+    print('All servers stopped successfully!')
 
 def contains_special_token(tag, token):
     return token in tag
@@ -55,7 +57,7 @@ def print_changes_since_last_tag(local_tag, remote_tag):
     else:
         print("No changes were found, or the tags are identical.\n")
 
-def run_autoupdate(restart_script: str, port: int, special_token: str):
+def run_autoupdate(restart_script: str, special_token: str, ports_to_kill: list):
     while True:
         fetch_latest_tags()
         local_tag = get_latest_tag()
@@ -67,7 +69,7 @@ def run_autoupdate(restart_script: str, port: int, special_token: str):
             print_changes_since_last_tag(local_tag, remote_tag)
             if contains_special_token(remote_tag, special_token):
                 print("Remote tag contains special token. Running the autoupdate steps...")
-                stop_server_on_port(port)
+                stop_server_on_port(ports_to_kill)
                 subprocess.Popen(f"{restart_script}", shell=True)
                 print("Finished running the autoupdate steps! Server is ready.")
             else:
@@ -82,10 +84,16 @@ if __name__ == "__main__":
     parser.add_argument("--restart_script", type=str)
     args = parser.parse_args()
 
-    port = int(os.environ.get('CURRENT_SERVER_PORT', 6919))
+    orchestrator_port = int(os.environ.get('CURRENT_SERVER_PORT', 6920))
+    service_port = int(os.environ.get('SERVICE_SERVER_PORT', 6919))
+    comfyui_port = int(os.environ.get('COMFYUI_SERVER_PORT', 8188))
+
     token = os.environ.get('SERVER_RELOAD_GIT_TOKEN', '')
-    print(f"\nListening for Git tag updates on port {port}.")
+
+    print(f"\nListening for Git tag updates on port {orchestrator_port}.")
     print(f"Listening for tags containing the token: '{token}' (if specified).\n")
 
 
-    run_autoupdate(restart_script=args.restart_script, port=port, special_token=token)
+    run_autoupdate(restart_script=args.restart_script, 
+                   special_token=token, 
+                   ports_to_kill=[orchestrator_port, service_port, comfyui_port])

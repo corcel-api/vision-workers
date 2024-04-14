@@ -1,22 +1,22 @@
 FROM nvidia/cuda:11.8.0-devel-ubuntu20.04
 
-WORKDIR /app
-
 # Installing necessary packages
 RUN apt-get update && apt-get install -y wget git
 
-# Installing Miniconda
+# Installing/setting up Miniconda
 RUN wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh \
     && chmod 700 Miniconda3-latest-Linux-x86_64.sh \
     && ./Miniconda3-latest-Linux-x86_64.sh -b \
     && rm Miniconda3-latest-Linux-x86_64.sh
 
 ENV PATH="/root/miniconda3/bin:${PATH}"
+
 RUN conda create -n venv python=3.10.13 -y \
     && echo "source activate venv" > ~/.bashrc
+
 ENV PATH="/root/miniconda3/envs/venv/bin:${PATH}"
 
-# Installing CUDA toolkit matching the CUDA version from the base image
+# Installing CUDA toolkit
 RUN CUDA_VERSION="11.8.0" && \
     CUDA_VERSION_MAJOR=$(echo $CUDA_VERSION | cut -d'.' -f1) && \
     CUDA_VERSION_MINOR=$(echo $CUDA_VERSION | cut -d'.' -f2) && \
@@ -24,18 +24,18 @@ RUN CUDA_VERSION="11.8.0" && \
     conda install nvidia/label/cuda-${CUDA_VERSION_SIMPLE}::cuda-toolkit -y
 
 # Vllm patch for cuda118
-COPY cu118_vllm_patch.sh /app/cu118_vllm_patch.sh
-RUN chmod +x /app/cu118_vllm_patch.sh \
-    && /app/cu118_vllm_patch.sh
+COPY cu118_vllm_patch.sh /cu118_vllm_patch.sh
+RUN chmod +x /cu118_vllm_patch.sh \
+    && /cu118_vllm_patch.sh
 
-COPY llm_server/requirements.txt ./app/requirements.txt
-RUN pip install -r ./app/requirements.txt \
+# llm server requirements
+COPY llm_server/requirements.txt /requirements.txt
+RUN pip install -r /requirements.txt \
     && pip install huggingface_hub[hf_transfer]
 
-COPY ./ /app/
+COPY ./ /
 
-RUN chmod +x /app/llm_server/entrypoint.sh
-
+RUN chmod +x /*.sh
 
 ENV HF_HUB_ENABLE_HF_TRANSFER=1
 ENV SERVER_RELOAD_GIT_TOKEN=restart_llm_server
@@ -44,5 +44,5 @@ ARG SERVER_PORT=6919
 ENV CURRENT_SERVER_PORT=${SERVER_PORT}
 EXPOSE $CURRENT_SERVER_PORT
 
-CMD ["bash", "-c", "cd /app/ && python run_autoupdater.py --restart_script /app/llm_autoupdater_action.sh & && /app/llm_server/entrypoint.sh"]
+CMD ["sh", "-c", "pm2-runtime start ecosystem_llm.config.js"]
 

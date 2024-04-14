@@ -73,7 +73,12 @@ ARG SERVER_PORT=6920
 ENV CURRENT_SERVER_PORT=${SERVER_PORT}
 EXPOSE $CURRENT_SERVER_PORT
 
-CMD ["pm2-runtime", "start", "ecosystem.config.js"]
-#CMD ["sh", "-c", "./setup.sh && pm2-runtime start ecosystem.config.js"]
+# image / llm server port
+ARG SERVICE_SERVER_PORT=6919
+ARG COMFYUI_SERVER_PORT=8188
+ENV SERVICE_SERVER_PORT=${SERVICE_SERVER_PORT}
+ENV COMFYUI_SERVER_PORT=${COMFYUI_SERVER_PORT}
+
+CMD ["sh", "-c", "./setup.sh && pm2-runtime start ecosystem_orchestrator.config.js"]
 
 

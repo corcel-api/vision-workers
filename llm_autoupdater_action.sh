@@ -8,3 +8,8 @@
 # SOME STEPS ARE COMMENTED OUT IN THIS UPDATE AS THEY ARE NOT NEEDED
 
 echo "Just some changes"
+echo "Just some changes"
+echo "Just some changes"
+echo "Just some changes"
+
+/llm_server/entrypoint.sh

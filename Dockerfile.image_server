@@ -1,7 +1,5 @@
 FROM nvidia/cuda:11.8.0-devel-ubuntu20.04
 
-WORKDIR /app
-
 ENV DEBIAN_FRONTEND=noninteractive
 
 # PM2
@@ -24,39 +22,20 @@ RUN conda create -n venv python=3.10.13 -y \
     && echo "source activate venv" > ~/.bashrc
 ENV PATH="/root/miniconda3/envs/venv/bin:${PATH}"
 
-RUN apt-get update \
-    && apt-get upgrade -y \
-    && apt-get -y full-upgrade \
-    && apt-get -y install python3-dev \
-    && apt-get install -y --no-install-recommends \
-    build-essential \
-    python3-pip\
-    apt-utils \
-    curl \
-    wget \
-    vim \
-    sudo \
-    git \
-    ffmpeg \
-    libsm6 \
-    libxext6 \
-    python3-tk \
-    python3-dev \
-    git-lfs \
-    unzip \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*
+# Update and install system packages
+RUN apt-get update && apt-get upgrade -y && apt-get full-upgrade -y
+RUN apt-get install -y --no-install-recommends build-essential python3-dev python3-pip apt-utils \
+    curl wget vim sudo git ffmpeg libsm6 libxext6 python3-tk git-lfs unzip
+RUN apt-get clean && rm -rf /var/lib/apt/lists/*
 
-RUN apt-get update && apt-get install -y unzip
+# Install Python packages
+COPY image_server/requirements.txt /requirements.txt
+RUN pip install --upgrade pip setuptools \
+    && pip install -r /requirements.txt \
+    && pip install huggingface_hub[hf_transfer] \
+    && rm -rf /root/.cache/pip/*
 
-COPY image_server/requirements.txt /app/requirements.txt
-RUN pip install --upgrade pip
-RUN pip install --upgrade pip setuptools
-RUN  pip install -r /app/requirements.txt 
-RUN pip install huggingface_hub[hf_transfer]
-RUN rm -rf /root/.cache/pip/* 
-
-COPY ./ /app/
+COPY ./ /
 
 ENV APP_HOST=0.0.0.0
 ENV APP_PORT=8080
@@ -67,11 +46,11 @@ ENV VLLM_PORT=6919
 ENV DEVICE=0
 ENV SERVER_RELOAD_GIT_TOKEN=restart_image_server
 
-RUN chmod +x /app/image_server/entrypoint.sh
+RUN chmod +x /image_server/entrypoint.sh
 
 ARG SERVER_PORT=6919
 ENV CURRENT_SERVER_PORT=${SERVER_PORT}
 EXPOSE $CURRENT_SERVER_PORT
 
-CMD ["bash", "-c", "cd /app/ && python run_autoupdater.py --restart_script /app/image_autoupdater_action.sh & && cd /app/image_server && ./setup.sh && /app/image_server/entrypoint.sh"]
+CMD ["sh", "-c", "pm2-runtime start ecosystem_image.config.js"]
 
