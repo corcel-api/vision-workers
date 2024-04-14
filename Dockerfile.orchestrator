@@ -7,7 +7,7 @@ RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
 # Node.js, PM2 and other packages 
 RUN apt-get update && apt-get install -y \
-    wget git curl lsof build-essential python3-pip python3-dev \
+    wget git curl lsof procps build-essential python3-pip python3-dev \
     apt-utils vim sudo ffmpeg libsm6 libxext6 python3-tk git-lfs unzip \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* \

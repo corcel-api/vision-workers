@@ -3,7 +3,7 @@ FROM nvidia/cuda:11.8.0-devel-ubuntu20.04
 ENV DEBIAN_FRONTEND=noninteractive
 
 # PM2 & necessary packages
-RUN apt-get update && apt-get install -y curl wget git\
+RUN apt-get update && apt-get install -y curl wget git lsof procps\
     && curl -sL https://deb.nodesource.com/setup_18.x | bash - \
     && apt-get install -y nodejs \
     && npm install -g pm2 
