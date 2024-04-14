@@ -56,7 +56,7 @@ def run_autoupdate(restart_script: str, port: int, special_token: str):
             if contains_special_token(remote_tag, special_token):
                 print("Remote tag contains special token. Running the autoupdate steps...")
                 stop_server_on_port(port)
-                subprocess.Popen(f"./{restart_script}", shell=True)
+                subprocess.Popen(f"{restart_script}", shell=True)
                 print("Finished running the autoupdate steps! Server is ready.")
             else:
                 print("Updated local repository without needing to restart the server.")
