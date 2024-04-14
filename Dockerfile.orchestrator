@@ -1,7 +1,5 @@
 FROM nvidia/cuda:11.8.0-devel-ubuntu20.04
 
-# --------------------------------------- Common ---------------------------------------
-
 # In order to avoid interruptions during libraries install
 ENV DEBIAN_FRONTEND=noninteractive
 ENV TZ=Europe/London
