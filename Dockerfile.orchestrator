@@ -82,6 +82,6 @@ ARG COMFYUI_SERVER_PORT=8188
 ENV SERVICE_SERVER_PORT=${SERVICE_SERVER_PORT}
 ENV COMFYUI_SERVER_PORT=${COMFYUI_SERVER_PORT}
 
-CMD ["sh", "-c", "cd /image_server && /setup.sh && cd ..  && pm2-runtime start ecosystem_orchestrator.config.js"]
+CMD ["sh", "-c", "cd /image_server && ./setup.sh && cd ..  && pm2-runtime start ecosystem_orchestrator.config.js"]
 
 
