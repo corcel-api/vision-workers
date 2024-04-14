@@ -21,7 +21,7 @@ class DatabaseClient:
 
     def get_latest_model_payload(self):
         # Fetch the payload directly from the MongoDB document
-        doc = self.db.best_finetune_model.find_one({'_id': 'best_finetune_model'})
+        doc = self.db.best_finetune_model.find_one({'_id': '661c5b89dafe3bea7f8498c0'})
         if doc:
             return {key: value for key, value in doc.items() if key != '_id'}
         return None
