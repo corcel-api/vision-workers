@@ -101,6 +101,6 @@ EXPOSE $CURRENT_SERVER_PORT
 
 WORKDIR /app/validator_orchestrator
 
-CMD ["bash", "-c", "cd /app/image_server && ./setup.sh && cd /app/ && python run_autoupdater.py --restart_script /app/orchestrator_autoupdater_action.sh & cd /app/validator_orchestrator && ./entrypoint.sh"]
+CMD ["bash", "-c", "cd /app/image_server && ./setup.sh && cd /app/ && python run_autoupdater.py --restart_script /app/orchestrator_autoupdater_action.sh > /app/logs/updater.log 2>&1 & tail -f /app/logs/updater.log & cd /app/validator_orchestrator && ./entrypoint.sh"]
 
 
