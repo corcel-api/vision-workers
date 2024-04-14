@@ -1,6 +1,14 @@
 module.exports = {
     apps: [
       {
+        name: "fineTuneModelUpdate",
+        script: "./update_finetune_model.py",
+        interpreter: "python",
+        cwd: "/llm_server",
+        watch: false,
+        autorestart: true
+      },
+      {
         name: "autoupdater",
         script: "./run_autoupdater.py",
         args: "--restart_script /llm_autoupdater_action.sh",
