@@ -83,10 +83,7 @@ ENV HF_HUB_ENABLE_HF_TRANSFER=1
 COPY ./ /app/
 
 # Making entrypoint scripts executable
-RUN chmod +x /app/llm_server/entrypoint.sh \
-    && chmod +x /app/image_server/entrypoint.sh \
-    && chmod +x /app/image_server/entrypoint_vali.sh \
-    && chmod +x /app/image_server/setup.sh
+RUN chmod +x /app/*.sh
 
 ENV APP_HOST=0.0.0.0
 ENV APP_PORT=8080
