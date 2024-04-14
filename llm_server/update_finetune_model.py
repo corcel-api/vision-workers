@@ -41,14 +41,14 @@ def main():
     while True:
         try:
             current_payload = db_client.get_latest_model_payload()
-
+            print("Current model : ", current_payload)
             if current_payload != last_loaded_model_payload:
                 print(f"[{datetime.now()}] New model detected: {current_payload}. Loading...")
                 status_code, response_text = load_new_model(current_payload)
                 print(f"Response from server: {status_code}, {response_text}")
                 last_loaded_model_payload = current_payload
             else:
-                print(f"[{datetime.now()}] No new model update. Checking again in one minute.")
+                print(f"[{datetime.now()}] No new model update.")
         except Exception as e:
             print(f"[{datetime.now()}] Error: {e}")
 
