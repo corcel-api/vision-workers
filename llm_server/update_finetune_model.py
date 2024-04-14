@@ -3,7 +3,6 @@ import time
 from datetime import datetime
 from pymongo import MongoClient
 from pymongo.errors import ConnectionFailure
-import certifi
 
 class DatabaseClient:
     def __init__(self, uri):
@@ -11,7 +10,7 @@ class DatabaseClient:
 
     def connect_mongodb(self, uri):
         try:
-            client = MongoClient(uri, serverSelectionTimeoutMS=5000, ssl=True, ssl_ca_certs=certifi.where())  # 5 seconds timeout for testing the connection
+            client = MongoClient(uri, serverSelectionTimeoutMS=5000, ssl=True)  # 5 seconds timeout for testing the connection
             client.server_info()  # Force a call to the server which will trigger a connection attempt
             print(f"[{datetime.now()}] Successfully connected to MongoDB.")
             return client['llm_server_miners']
