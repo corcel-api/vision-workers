@@ -9,5 +9,4 @@
 
 echo "Just some changes"
 
-cd /validator_orchestrator 
-./entrypoint.sh
+pm2 start ecosystem.config.js --only entrypoint
