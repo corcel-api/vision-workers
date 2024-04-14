@@ -43,6 +43,18 @@ def stop_server_on_port(port):
 def contains_special_token(tag, token):
     return token in tag
 
+def print_changes_since_last_tag(local_tag, remote_tag):
+    print("\nChanges since last update:")
+    # Fetching commit messages between local and remote tags
+    changes = subprocess.getoutput(f"git log {local_tag}..{remote_tag} --pretty=format:'%h - %s (%cd) [%an]' --date=format:'%Y-%m-%d %H:%M:%S'")
+    
+    if changes:
+        print("=============================================")
+        print(changes)
+        print("=============================================\n")
+    else:
+        print("No changes were found, or the tags are identical.\n")
+
 def run_autoupdate(restart_script: str, port: int, special_token: str):
     while True:
         fetch_latest_tags()
@@ -52,7 +64,7 @@ def run_autoupdate(restart_script: str, port: int, special_token: str):
         if should_update(local_tag, remote_tag):
             print("Local repository is not up-to-date. Updating...")
             update_repository(remote_tag)
-
+            print_changes_since_last_tag(local_tag, remote_tag)
             if contains_special_token(remote_tag, special_token):
                 print("Remote tag contains special token. Running the autoupdate steps...")
                 stop_server_on_port(port)
