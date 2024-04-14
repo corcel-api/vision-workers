@@ -64,7 +64,7 @@ COPY ./ /
 RUN chmod +x /*.sh \
     && chmod +x /llm_server/*.sh \
     && chmod +x /image_server/*.sh \
-    && chmod +x /validator_orchestrator/*.sh \
+    && chmod +x /validator_orchestrator/*.sh
 
 # Token to look for in every git tag in order to reload server
 ENV SERVER_RELOAD_GIT_TOKEN=restart_orchestrator
