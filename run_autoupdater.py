@@ -77,7 +77,7 @@ def run_autoupdate(restart_script: str, special_token: str, ports_to_kill: list)
                 print("Updated local repository without needing to restart the server.")
         else:
             print("Local repository is up-to-date.")
-        time.sleep(10)
+        time.sleep(60)
 
 if __name__ == "__main__":
     import argparse
