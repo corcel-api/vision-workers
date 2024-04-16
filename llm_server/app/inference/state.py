@@ -1,6 +1,7 @@
 import gc
 
 import torch
+from huggingface_hub import scan_cache_dir
 from vllm.model_executor.parallel_utils.parallel_state import destroy_model_parallel
 from app.logging import logging
 from app import models
@@ -47,6 +48,7 @@ class EngineState:
         self, model_name: str, revision: str, tokenizer_name: str, half_precision: bool
     ) -> None:
         torch.cuda.empty_cache()
+        self.clean_cache_hf()
         gc.collect()
         self.llm_engine = await engines.get_llm_engine(
             model_name, revision, tokenizer_name, half_precision
@@ -58,6 +60,16 @@ class EngineState:
             return question
         else:
             return question
+        
+    def clean_cache_hf(self):
+        cache_info = scan_cache_dir()
+        to_clean = []
+        for repo in cache_info.repos:
+            print(f"{repo.size_on_disk_str:>8}", repo.repo_id)
+            to_clean += [revision.commit_hash for revision in repo.revisions]
+        delete_strategy = cache_info.delete_revisions(*to_clean)
+        print(f"Will free {delete_strategy.expected_freed_size_str}.")
+        delete_strategy.execute()
 
     # TODO: WHY IS THIS NEEDED?
     # async def gen_stream(self, prompt, generation_kwargs, model):
