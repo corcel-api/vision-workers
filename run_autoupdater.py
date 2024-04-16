@@ -5,19 +5,15 @@ import argparse
 
 
 def get_latest_tag():
-    # Get the latest tag from the local repository
     return subprocess.getoutput("git describe --tags --abbrev=0")
 
 def get_latest_remote_tag(branch):
-    # Make sure to fetch the latest commits and tags first
     subprocess.run(["git", "fetch", "--tags", "origin", branch], check=True)
-    # Get the latest tag from the specified branch in the remote repository
     latest_commit = subprocess.getoutput(f"git rev-list --tags --max-count=1 --branches=origin/{branch}")
     return subprocess.getoutput(f"git describe --tags --abbrev=0 {latest_commit}")
 
 
 def fetch_latest_tags(branch):
-    # Fetch tags only from the specified branch
     subprocess.run(["git", "fetch", "--tags", "origin", branch], check=True)
 
 def should_update(local_tag, remote_tag):
