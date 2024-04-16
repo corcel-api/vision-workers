@@ -65,7 +65,7 @@ def print_changes_since_last_tag(local_tag, remote_tag):
 def run_autoupdate(restart_script: str, special_token: str, ports_to_kill: list, branch: str, auto_updates_sleep: int):
     while True:
         fetch_latest_tags(branch)
-        local_tag = get_latest_tag(branch)
+        local_tag = get_latest_tag()
         remote_tag = get_latest_remote_tag(branch)
 
         if should_update(local_tag, remote_tag) and contains_special_token(remote_tag, special_token):
