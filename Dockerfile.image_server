@@ -51,4 +51,3 @@ ENV CURRENT_SERVER_PORT=${SERVER_PORT}
 EXPOSE $CURRENT_SERVER_PORT
 
 CMD ["sh", "-c", "pm2-runtime start ecosystem_image.config.js"]
-
