@@ -1,18 +1,25 @@
 import subprocess
 import time
 import os
+import argparse
 
-def fetch_latest_tags():
-    # Explicitly fetch all tags from the remote repository
-    subprocess.run(["git", "fetch", "--tags"], check=True)
 
-def get_latest_tag():
-    # Get the latest tag from the local repository
-    return subprocess.getoutput("git describe --tags --abbrev=0")
+def get_latest_tag(branch):
+    # Get the latest tag from the specified branch in the local repository
+    latest_commit = subprocess.getoutput(f"git rev-list --tags --max-count=1 --branches={branch}")
+    return subprocess.getoutput(f"git describe --tags --abbrev=0 {latest_commit}")
 
-def get_latest_remote_tag():
-    # Get the latest tag from the remote repository
-    return subprocess.getoutput("git describe --tags --abbrev=0 `git rev-list --tags --max-count=1`")
+def get_latest_remote_tag(branch):
+    # Make sure to fetch the latest commits and tags first
+    subprocess.run(["git", "fetch", "--tags", "origin", branch], check=True)
+    # Get the latest tag from the specified branch in the remote repository
+    latest_commit = subprocess.getoutput(f"git rev-list --tags --max-count=1 --branches=origin/{branch}")
+    return subprocess.getoutput(f"git describe --tags --abbrev=0 {latest_commit}")
+
+
+def fetch_latest_tags(branch):
+    # Fetch tags only from the specified branch
+    subprocess.run(["git", "fetch", "--tags", "origin", branch], check=True)
 
 def should_update(local_tag, remote_tag):
     print(f"Comparing local tag: {local_tag} to remote tag: {remote_tag}")
@@ -57,44 +64,43 @@ def print_changes_since_last_tag(local_tag, remote_tag):
     else:
         print("No changes were found, or the tags are identical.\n")
 
-def run_autoupdate(restart_script: str, special_token: str, ports_to_kill: list):
+def run_autoupdate(restart_script: str, special_token: str, ports_to_kill: list, branch: str):
     while True:
-        fetch_latest_tags()
-        local_tag = get_latest_tag()
-        remote_tag = get_latest_remote_tag()
+        fetch_latest_tags(branch)
+        local_tag = get_latest_tag(branch)
+        remote_tag = get_latest_remote_tag(branch)
 
-        if should_update(local_tag, remote_tag):
-            print("Local repository is not up-to-date. Updating...")
+        if should_update(local_tag, remote_tag) and contains_special_token(remote_tag, special_token):
+            print(f"Local repository is not up-to-date. Updating...")
             update_repository(remote_tag)
             print_changes_since_last_tag(local_tag, remote_tag)
-            if contains_special_token(remote_tag, special_token):
-                print("Remote tag contains special token. Running the autoupdate steps...")
-                stop_server_on_port(ports_to_kill)
-                subprocess.run(f"chmod +x {restart_script}", shell=True) 
-                subprocess.Popen(f"/bin/sh {restart_script}", shell=True)
-                print("Finished running the autoupdate steps! Server is ready.")
-            else:
-                print("Updated local repository without needing to restart the server.")
+            print(f"Remote tag contains required token. Running the autoupdate steps...")
+            stop_server_on_port(ports_to_kill)
+            subprocess.run(f"chmod +x {restart_script}", shell=True)
+            subprocess.Popen(f"/bin/sh {restart_script}", shell=True)
+            print("Finished running the autoupdate steps! Server is ready.")
         else:
-            print("Local repository is up-to-date.")
+            print("Local repository is up-to-date or the tag does not contain the required token.")
         time.sleep(60)
 
 if __name__ == "__main__":
-    import argparse
     parser = argparse.ArgumentParser()
     parser.add_argument("--restart_script", type=str)
     args = parser.parse_args()
+
+    # Read environment configuration
+    current_env = os.environ.get('CURRENT_ENV', 'dev').lower()
+    branch = os.environ.get('GIT_BRANCH', 'main' if current_env == 'prod' else 'dev')
+    special_token = "_prod" if current_env == "prod" else "_dev"
 
     orchestrator_port = int(os.environ.get('CURRENT_SERVER_PORT', 6920))
     service_port = int(os.environ.get('SERVICE_SERVER_PORT', 6919))
     comfyui_port = int(os.environ.get('COMFYUI_SERVER_PORT', 8188))
 
-    token = os.environ.get('SERVER_RELOAD_GIT_TOKEN', '')
-
-    print(f"\nListening for Git tag updates on port {orchestrator_port}.")
-    print(f"Listening for tags containing the token: '{token}' (if specified).\n")
-
+    print(f"\nEnvironment: {current_env.upper()}")
+    print(f"Listening for Git tag updates on branch '{branch}' with tags containing the token: '{special_token}'\n")
 
     run_autoupdate(restart_script=args.restart_script, 
-                   special_token=token, 
-                   ports_to_kill=[orchestrator_port, service_port, comfyui_port])
+                   special_token=special_token, 
+                   ports_to_kill=[orchestrator_port, service_port, comfyui_port],
+                   branch=branch)
