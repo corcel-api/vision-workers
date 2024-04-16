@@ -4,6 +4,7 @@ from datetime import datetime
 from pymongo import MongoClient
 from pymongo.errors import ConnectionFailure
 from pymongo.server_api import ServerApi
+import os
 
 class DatabaseClient:
     def __init__(self, uri):
@@ -36,6 +37,8 @@ def main():
     db_client = DatabaseClient(uri)
     last_loaded_model_payload = db_client.get_latest_model_payload()
 
+    model_auto_updates_sleep = int(os.environ.get('LLM_MODEL_AUTOUP_SLEEP', '60'))
+
     while True:
         try:
             current_payload = db_client.get_latest_model_payload()
@@ -50,7 +53,7 @@ def main():
         except Exception as e:
             print(f"[{datetime.now()}] Error: {e}")
 
-        time.sleep(60)
+        time.sleep(model_auto_updates_sleep)
 
 if __name__ == "__main__":
     main()

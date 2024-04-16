@@ -56,7 +56,6 @@ def print_changes_since_last_tag(local_tag, remote_tag):
     print("\nChanges since last update:")
     # Fetching commit messages between local and remote tags
     changes = subprocess.getoutput(f"git log {local_tag}..{remote_tag} --pretty=format:'%h - %s (%cd) [%an]' --date=format:'%Y-%m-%d %H:%M:%S'")
-    
     if changes:
         print("=============================================")
         print(changes)
@@ -64,7 +63,7 @@ def print_changes_since_last_tag(local_tag, remote_tag):
     else:
         print("No changes were found, or the tags are identical.\n")
 
-def run_autoupdate(restart_script: str, special_token: str, ports_to_kill: list, branch: str):
+def run_autoupdate(restart_script: str, special_token: str, ports_to_kill: list, branch: str, auto_updates_sleep: int):
     while True:
         fetch_latest_tags(branch)
         local_tag = get_latest_tag(branch)
@@ -81,14 +80,14 @@ def run_autoupdate(restart_script: str, special_token: str, ports_to_kill: list,
             print("Finished running the autoupdate steps! Server is ready.")
         else:
             print("Local repository is up-to-date or the tag does not contain the required token.")
-        time.sleep(60)
+        time.sleep(auto_updates_sleep)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--restart_script", type=str)
     args = parser.parse_args()
 
-    # Read environment configuration
+    auto_updates_sleep = int(os.environ.get('AUTOUP_SLEEP', '60'))
     current_env = os.environ.get('CURRENT_ENV', 'dev').lower()
     branch = os.environ.get('GIT_BRANCH', 'main' if current_env == 'prod' else 'dev')
     special_token = "_prod" if current_env == "prod" else "_dev"
@@ -103,4 +102,5 @@ if __name__ == "__main__":
     run_autoupdate(restart_script=args.restart_script, 
                    special_token=special_token, 
                    ports_to_kill=[orchestrator_port, service_port, comfyui_port],
-                   branch=branch)
+                   branch=branch,
+                   auto_updates_sleep=auto_updates_sleep)
