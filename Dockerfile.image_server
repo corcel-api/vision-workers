@@ -35,7 +35,7 @@ RUN pip install --upgrade pip setuptools \
     && rm -rf /root/.cache/pip/*
 
 COPY image_server/ /app/image_server/
-COPY ecosystem_llm.config.js /app/ecosystem_llm.config.js
+COPY ecosystem_llm.config.js /app/ecosystem_image.config.js
 
 ENV APP_HOST=0.0.0.0
 ENV APP_PORT=8080

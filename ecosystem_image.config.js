@@ -3,7 +3,7 @@ module.exports = {
       {
         name: "entrypoint",
         script: "./entrypoint.sh",
-        cwd: "/image_server",
+        cwd: "/app/image_server",
         watch: false,
         autorestart: false
       }
