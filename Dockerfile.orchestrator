@@ -1,5 +1,7 @@
 FROM nvidia/cuda:11.8.0-devel-ubuntu20.04
 
+WORKDIR /app
+
 # In order to avoid interruptions during libraries install
 ENV DEBIAN_FRONTEND=noninteractive
 ENV TZ=Europe/London
@@ -35,39 +37,37 @@ RUN CUDA_VERSION="11.8.0" && \
     conda install nvidia/label/cuda-${CUDA_VERSION_SIMPLE}::cuda-toolkit -y
 
 # Vllm patch for cuda118 / llm server
-COPY cu118_vllm_patch.sh /cu118_vllm_patch.sh
-RUN chmod +x /cu118_vllm_patch.sh
-RUN /cu118_vllm_patch.sh
+COPY cu118_vllm_patch.sh /app/cu118_vllm_patch.sh
+RUN chmod +x /app/cu118_vllm_patch.sh
+RUN /app/cu118_vllm_patch.sh
 
 # LLM server requirements
-COPY llm_server/requirements.txt /llm_server_requirements.txt
-RUN pip install -r /llm_server_requirements.txt
+COPY llm_server/requirements.txt /app/llm_server_requirements.txt
+RUN pip install -r /app/llm_server_requirements.txt
 
 # Validator orchestrator requirements
-COPY validator_orchestrator/requirements.txt /validator_orchestrator_requirements.txt
-RUN conda run -n venv pip install --no-cache-dir -r /validator_orchestrator_requirements.txt \
+COPY validator_orchestrator/requirements.txt /app/validator_orchestrator_requirements.txt
+RUN conda run -n venv pip install --no-cache-dir -r /app/validator_orchestrator_requirements.txt \
     && conda run -n venv pip install --no-cache-dir huggingface_hub[hf_transfer]
 
 # image server requirements
-COPY image_server/requirements.txt /image_server_requirements.txt
+COPY image_server/requirements.txt /app/image_server_requirements.txt
 RUN conda run -n venv pip install --no-cache-dir xformers==0.0.23.post1 torchvision torch --index-url https://download.pytorch.org/whl/cu118 \
     && conda run -n venv pip install --upgrade pip setuptools \
-    && conda run -n venv pip install -r /image_server_requirements.txt \
+    && conda run -n venv pip install -r /app/image_server_requirements.txt \
     && conda run -n venv pip install protobuf huggingface_hub[hf_transfer]
 
 ENV HF_HUB_ENABLE_HF_TRANSFER=1
 
 # Copying everything (for autoupdates to work properly)
-COPY ./ /
+COPY ./ /app/
 
 # Making all scripts executable
-RUN chmod +x /*.sh \
-    && chmod +x /llm_server/*.sh \
-    && chmod +x /image_server/*.sh \
-    && chmod +x /validator_orchestrator/*.sh
-
-# Token to look for in every git tag in order to reload server
-ENV SERVER_RELOAD_GIT_TOKEN=restart_orchestrator
+RUN chmod +x /app/orchestrator_autoupdater_action.sh.sh \
+    && chmod +x /app/llm_server/entrypoint.sh \
+    && chmod +x /app/image_server/entrypoint_vali.sh \
+    && chmod +x /app/image_server/setup.sh \
+    && chmod +x /app/validator_orchestrator/entrypoint.sh
 
 USER root
 
@@ -82,6 +82,6 @@ ARG COMFYUI_SERVER_PORT=8188
 ENV SERVICE_SERVER_PORT=${SERVICE_SERVER_PORT}
 ENV COMFYUI_SERVER_PORT=${COMFYUI_SERVER_PORT}
 
-CMD ["sh", "-c", "cd /image_server && ./setup.sh && cd ..  && pm2-runtime start ecosystem_orchestrator.config.js"]
+CMD ["sh", "-c", "cd /app/image_server && /app/setup.sh && cd ..  && pm2-runtime start /app/ecosystem_orchestrator.config.js"]
 
 
