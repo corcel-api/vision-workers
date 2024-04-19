@@ -49,12 +49,10 @@ def contains_special_token(tag: str, token: str) -> bool:
     return token in tag
 
 def print_changes_since_last_tag(local_tag: str, remote_tag: str) -> None:
-    logging.info("\nChanges since last update:")
+    logging.info("Changes since last update:")
     changes = subprocess.getoutput(f"git log {local_tag}..{remote_tag} --pretty=format:'%h - %s (%cd) [%an]' --date=format:'%Y-%m-%d %H:%M:%S'")
     if changes:
-        logging.info("=============================================")
         logging.info(changes)
-        logging.info("=============================================\n")
     else:
         logging.info("No changes were found, or the tags are identical.\n")
 
