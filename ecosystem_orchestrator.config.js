@@ -11,7 +11,7 @@ module.exports = {
       {
         name: "entrypoint",
         script: "./entrypoint.sh",
-        cwd: "/validator_orchestrator",
+        cwd: "/app/validator_orchestrator",
         watch: false,
         autorestart: false
       }
