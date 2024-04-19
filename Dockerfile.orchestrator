@@ -63,7 +63,7 @@ ENV HF_HUB_ENABLE_HF_TRANSFER=1
 COPY ./ /app/
 
 # Making all scripts executable
-RUN chmod +x /app/orchestrator_autoupdater_action.sh.sh \
+RUN chmod +x /app/orchestrator_autoupdater_action.sh \
     && chmod +x /app/llm_server/entrypoint.sh \
     && chmod +x /app/image_server/entrypoint_vali.sh \
     && chmod +x /app/image_server/setup.sh \
