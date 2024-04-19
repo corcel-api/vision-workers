@@ -1,5 +1,7 @@
 FROM nvidia/cuda:11.8.0-devel-ubuntu20.04
 
+WORKDIR /app
+
 ENV DEBIAN_FRONTEND=noninteractive
 
 # PM2 & necessary packages
@@ -26,13 +28,14 @@ RUN apt-get update && apt-get upgrade -y && apt-get full-upgrade -y \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Install Python packages
-COPY image_server/requirements.txt /requirements.txt
+COPY image_server/requirements.txt /app/requirements.txt
 RUN pip install --upgrade pip setuptools \
-    && pip install -r /requirements.txt \
+    && pip install -r /app/requirements.txt \
     && pip install huggingface_hub[hf_transfer] \
     && rm -rf /root/.cache/pip/*
 
-COPY ./ /
+COPY image_server/ /app/image_server/
+COPY ecosystem_llm.config.js /app/ecosystem_llm.config.js
 
 ENV APP_HOST=0.0.0.0
 ENV APP_PORT=8080
@@ -41,10 +44,8 @@ ENV HF_HUB_ENABLE_HF_TRANSFER=1
 USER root
 ENV VLLM_PORT=6919
 ENV DEVICE=0
-ENV SERVER_RELOAD_GIT_TOKEN=restart_image_server
 
-RUN chmod +x /*.sh \
-    && chmod +x /image_server/*.sh 
+RUN chmod +x /app/image_server/entrypoint.sh 
     
 ARG SERVER_PORT=6919
 ENV CURRENT_SERVER_PORT=${SERVER_PORT}

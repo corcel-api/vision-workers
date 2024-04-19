@@ -10,9 +10,7 @@ trap cleanup SIGINT SIGTERM
 
 source activate venv
 
-cd /image_server/
-
-./setup.sh
+bash image_server/setup.sh
 
 vram_mode=${VRAM_MODE:-}
 warmup=$(echo ${WARMUP:-true} | tr '[:upper:]' '[:lower:]')
@@ -21,11 +19,9 @@ port=${PORT:-6919}
 
 if [ -n "$vram_mode" ]
 then
-    cd /image_server/ComfyUI
-    python main.py $vram_mode --cuda-device $device --disable-xformers &
+    python image_server/ComfyUI/main.py $vram_mode --cuda-device $device --disable-xformers &
 else
-    cd /image_server/ComfyUI
-    python main.py --disable-xformers  --cuda-device $device &
+    python image_server/ComfyUI/main.py --disable-xformers  --cuda-device $device &
 fi
 
 
@@ -35,12 +31,10 @@ sleep 5
 
 if [ "$warmup" = "true" ]
 then
-    cd /image_server/
-    python warmup.py
+    python image_server/warmup.py
 else
     sleep 1
 fi
 
-cd /image_server/
-uvicorn main:app --host 0.0.0.0 --port $port
+uvicorn image_server.main:app --host 0.0.0.0 --port $port
 cleanup

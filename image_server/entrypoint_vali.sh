@@ -1,4 +1,5 @@
 #!/bin/bash
+
 cleanup() {
   echo "Stopping the ComfyUI server..."
   kill $COMFY_SERVER_PID
@@ -11,13 +12,12 @@ trap cleanup SIGINT SIGTERM
 device=${DEVICE:-0}
 
 source activate venv
-cd /image_server/ComfyUI
-python main.py --highvram --disable-xformers --cuda-device $device &
+
+python /image_server/ComfyUI/main.py --highvram --disable-xformers --cuda-device $device &
 
 COMFY_SERVER_PID=$!
 echo "ComfyUI server started with PID: $COMFY_SERVER_PID"
 sleep 5
 
-cd /image_server/
-uvicorn main:app --host 0.0.0.0 --port 6919
+uvicorn image_server.main:app --host 0.0.0.0 --port 6919
 cleanup
