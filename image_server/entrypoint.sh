@@ -17,6 +17,7 @@ warmup=$(echo ${WARMUP:-true} | tr '[:upper:]' '[:lower:]')
 device=${DEVICE:-0}
 port=${PORT:-6919}
 
+ls -la 
 if [ -n "$vram_mode" ]
 then
     python /ComfyUI/main.py $vram_mode --cuda-device $device --disable-xformers &
