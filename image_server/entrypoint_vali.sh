@@ -13,7 +13,7 @@ device=${DEVICE:-0}
 
 source activate venv
 ls -la
-python /image_server/ComfyUI/main.py --highvram --disable-xformers --cuda-device $device &
+python ./image_server/ComfyUI/main.py --highvram --disable-xformers --cuda-device $device &
 
 COMFY_SERVER_PID=$!
 echo "ComfyUI server started with PID: $COMFY_SERVER_PID"
