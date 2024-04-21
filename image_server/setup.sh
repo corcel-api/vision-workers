@@ -28,7 +28,12 @@ cd ComfyUI/custom_nodes
 
 [ -d ComfyUI-Inspire-Pack ] || git clone https://github.com/ltdrdata/ComfyUI-Inspire-Pack
 
-[ -d ComfyUI_IPAdapter_plus ] || git clone https://github.com/cubiq/ComfyUI_IPAdapter_plus
+if [ ! -d ComfyUI_IPAdapter_plus ]; then 
+  git clone https://github.com/cubiq/ComfyUI_IPAdapter_plus
+  cd ComfyUI_IPAdapter_plus
+  git checkout 0d0a7b3693baf8903fe2028ff218b557d619a93d
+  cd ..
+fi
 
 if [ ! -d ComfyUI_InstantID ]; then 
   git clone https://github.com/cubiq/ComfyUI_InstantID
