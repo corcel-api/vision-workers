@@ -12,7 +12,6 @@ trap cleanup SIGINT SIGTERM
 device=${DEVICE:-0}
 
 source activate venv
-ls -la
 python ./ComfyUI/main.py --highvram --disable-xformers --cuda-device $device &
 
 COMFY_SERVER_PID=$!
