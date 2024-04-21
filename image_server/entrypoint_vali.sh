@@ -13,11 +13,11 @@ device=${DEVICE:-0}
 
 source activate venv
 ls -la
-python ./image_server/ComfyUI/main.py --highvram --disable-xformers --cuda-device $device &
+python ./ComfyUI/main.py --highvram --disable-xformers --cuda-device $device &
 
 COMFY_SERVER_PID=$!
 echo "ComfyUI server started with PID: $COMFY_SERVER_PID"
 sleep 5
 
-uvicorn image_server.main:app --host 0.0.0.0 --port 6919
+uvicorn main:app --host 0.0.0.0 --port 6919
 cleanup
