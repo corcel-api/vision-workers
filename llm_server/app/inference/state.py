@@ -48,11 +48,17 @@ class EngineState:
         self, model_name: str, revision: str, tokenizer_name: str, half_precision: bool
     ) -> None:
         torch.cuda.empty_cache()
-        self.clean_cache_hf()
         gc.collect()
-        self.llm_engine = await engines.get_llm_engine(
-            model_name, revision, tokenizer_name, half_precision
-        )
+        try:
+            self.llm_engine = await engines.get_llm_engine(
+                model_name, revision, tokenizer_name, half_precision
+            )
+        except OSError:
+            self.clean_cache_hf()
+            self.llm_engine = await engines.get_llm_engine(
+                model_name, revision, tokenizer_name, half_precision
+            )
+
 
     # TODO: rename question & why is this needed?!
     async def grab_the_right_prompt(engine: models.LLMEngine, question: str):
