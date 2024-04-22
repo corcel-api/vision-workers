@@ -53,5 +53,8 @@ ARG SERVER_PORT=6919
 ENV CURRENT_SERVER_PORT=${SERVER_PORT}
 EXPOSE $CURRENT_SERVER_PORT
 
+RUN mkdir /app/cache/
+ENV HF_HOME=/app/cache/
+
 CMD ["sh", "-c", "pm2-runtime start ecosystem_llm.config.js"]
 
