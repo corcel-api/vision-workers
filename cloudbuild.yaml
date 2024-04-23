@@ -8,7 +8,8 @@ steps:
         echo "$$SSH_PRIVATE_KEY" > /root/.ssh/google_compute_engine &&
         chmod 600 /root/.ssh/google_compute_engine &&
         echo "$$SSH_PUBLIC_KEY" > /root/.ssh/google_compute_engine.pub &&
-        chmod 644 /root/.ssh/google_compute_engine.pub 
+        chmod 644 /root/.ssh/google_compute_engine.pub &&
+        ssh-keyscan -H compute.2272966253134891750 >> /root/.ssh/known_hosts
     env:
       - SSH_PRIVATE_KEY=$_SSH_PRIVATE_KEY
       - SSH_PUBLIC_KEY=$_SSH_PUBLIC_KEY
