@@ -10,7 +10,7 @@ steps:
         echo "$$SSH_PUBLIC_KEY" > /root/.ssh/google_compute_engine.pub &&
         chmod 644 /root/.ssh/google_compute_engine.pub &&
         ssh-keyscan -H 10.128.0.49 >> /root/.ssh/known_hosts
-    secretEnv:
+    env:
       - SSH_PRIVATE_KEY=$_SSH_PRIVATE_KEY
       - SSH_PUBLIC_KEY=$_SSH_PUBLIC_KEY
 
