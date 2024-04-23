@@ -18,11 +18,11 @@ steps:
   - name: 'gcr.io/cloud-builders/gcloud'
     args: ['compute', 'ssh', 'a100-cuda118', '--zone', 'us-central1-f', '--command', 'bash ~/build_docker_image.sh']
     env:
-    - PROJECT_ID=corcel-406412
+    - 'PROJECT_ID=$PROJECT_ID'
     - 'BUILD_ID=$BUILD_ID'
 
 secrets:
-  - kmsKeyName: 'projects/$PROJECT_ID/locations/global/keyRings/visionworkers/cryptoKeys/visionworkers'
+  - kmsKeyName: 'projects/corcel-406412/locations/global/keyRings/visionworkers'
     secretEnv:
-      SSH_PRIVATE_KEY: 'projects/$PROJECT_ID/secrets/visionw-ssh-private-key/versions/2'
-      SSH_PUBLIC_KEY: 'projects/$PROJECT_ID/secrets/visionw-ssh-public-key/versions/2'
+      SSH_PRIVATE_KEY: 'projects/corcel-406412/secrets/visionw-ssh-private-key/versions/2'
+      SSH_PUBLIC_KEY: 'projects/corcel-406412/secrets/visionw-ssh-public-key/versions/2'
