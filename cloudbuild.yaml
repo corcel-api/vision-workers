@@ -10,7 +10,9 @@ steps:
         echo "$$SSH_PUBLIC_KEY" | base64 --decode > /root/.ssh/google_compute_engine.pub &&
         chmod 644 /root/.ssh/google_compute_engine.pub &&
         ssh-keyscan -H a100-cuda118 >> /root/.ssh/known_hosts
-    secretEnv: ['SSH_PRIVATE_KEY', 'SSH_PUBLIC_KEY']
+    env:
+      - 'SSH_PRIVATE_KEY=$SSH_PRIVATE_KEY'
+      - 'SSH_PUBLIC_KEY=$SSH_PUBLIC_KEY'
 
   - name: 'gcr.io/cloud-builders/gcloud'
     args: ['compute', 'scp', '--recurse', './', 'a100-cuda118:~/', '--zone', 'us-central1-f']
@@ -20,9 +22,3 @@ steps:
     env:
     - 'PROJECT_ID=$PROJECT_ID'
     - 'BUILD_ID=$BUILD_ID'
-
-secrets:
-  - kmsKeyName: 'projects/$PROJECT_ID/locations/global/keyRings/visionworkers/cryptoKeys/visionworkers'
-    secretEnv:
-      SSH_PRIVATE_KEY: 'projects/183466620446/secrets/visionw-ssh-private-key/versions/latest'
-      SSH_PUBLIC_KEY: 'projects/183466620446/secrets/visionw-ssh-public-key/versions/latest'
