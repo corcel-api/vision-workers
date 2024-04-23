@@ -5,8 +5,8 @@ steps:
       - '-c'
       - |
         mkdir -p /root/.ssh &&
-        echo "$$SSH_PRIVATE_KEY" &&
-        echo "$$SSH_PUBLIC_KEY"
+        echo "$SSH_PRIVATE_KEY" &&
+        echo "$SSH_PUBLIC_KEY"
     secretEnv: ['SSH_PRIVATE_KEY', 'SSH_PUBLIC_KEY']
 
     env:
