@@ -1,15 +1,4 @@
 steps:
-  - name: 'gcr.io/cloud-builders/gcloud'
-    entrypoint: 'sh'
-    args:
-      - '-c'
-      - |
-        mkdir -p /builder/home/.ssh &&
-        echo "$_SSH_PRIVATE_KEY" &&
-        echo "$_SSH_PRIVATE_KEY" > /builder/home/.ssh/google_compute_engine &&
-        chmod 600 /builder/home/.ssh/google_compute_engine &&
-        echo "$_SSH_PUBLIC_KEY" > /builder/home/.ssh/google_compute_engine.pub &&
-        chmod 644 /builder/home/.ssh/google_compute_engine.pub
 
   - name: 'gcr.io/cloud-builders/gcloud'
     args: ['compute', 'scp', '--recurse', './', 'a100-cuda118:~/', '--zone', 'us-central1-f']
