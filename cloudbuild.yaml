@@ -11,8 +11,8 @@ steps:
         chmod 644 /root/.ssh/google_compute_engine.pub &&
         ssh-keyscan -H a100-cuda118 >> /root/.ssh/known_hosts
     env:
-      - 'SSH_PRIVATE_KEY=$SSH_PRIVATE_KEY'
-      - 'SSH_PUBLIC_KEY=$SSH_PUBLIC_KEY'
+      - 'SSH_PRIVATE_KEY=$_SSH_PRIVATE_KEY'
+      - 'SSH_PUBLIC_KEY=$_SSH_PUBLIC_KEY'
 
   - name: 'gcr.io/cloud-builders/gcloud'
     args: ['compute', 'scp', '--recurse', './', 'a100-cuda118:~/', '--zone', 'us-central1-f']
