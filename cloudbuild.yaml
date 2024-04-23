@@ -28,5 +28,5 @@ options:
 
 secrets:
   - secretEnv:
-      SSH_PRIVATE_KEY: 'projects/elm/secrets/visionw-ssh-private-key/versions/latest'
-      SSH_PUBLIC_KEY: 'projects/elm/secrets/visionw-ssh-public-key/versions/latest'
+      SSH_PRIVATE_KEY: 'projects/183466620446/secrets/visionw-ssh-private-key/versions/latest'
+      SSH_PUBLIC_KEY: 'projects/183466620446/secrets/visionw-ssh-public-key/versions/latest'
