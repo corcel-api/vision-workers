@@ -6,10 +6,6 @@ steps:
       - |
         mkdir -p /builder/home/.ssh &&
         echo "$SSH_PRIVATE_KEY"
-        echo "$SSH_PRIVATE_KEY" > /builder/home/.ssh/google_compute_engine &&
-        chmod 600 /builder/home/.ssh/google_compute_engine &&
-        echo "$SSH_PUBLIC_KEY" > /builder/home/.ssh/google_compute_engine.pub &&
-        chmod 644 /builder/home/.ssh/google_compute_engine.pub
     secretEnv:
       - SSH_PRIVATE_KEY
       - SSH_PUBLIC_KEY
