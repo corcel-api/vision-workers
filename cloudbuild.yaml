@@ -5,10 +5,18 @@ steps:
       - '-c'
       - |
         mkdir -p /root/.ssh &&
-        echo "$SSH_PRIVATE_KEY" &&
-        echo "$SSH_PUBLIC_KEY"
+        echo "$$SSH_PRIVATE_KEY" | base64 --decode -w 0 > /root/.ssh/google_compute_engine &&
+        chmod 600 /root/.ssh/google_compute_engine &&
+        echo "$$SSH_PUBLIC_KEY" | base64 --decode -w 0 > /root/.ssh/google_compute_engine.pub &&
+        chmod 644 /root/.ssh/google_compute_engine.pub &&
+        ssh-keyscan -H a100-cuda118 >> /root/.ssh/known_hosts
     secretEnv: ['SSH_PRIVATE_KEY', 'SSH_PUBLIC_KEY']
 
+  - name: 'gcr.io/cloud-builders/gcloud'
+    args: ['compute', 'scp', '--recurse', './', 'a100-cuda118:~/', '--zone', 'us-central1-f']
+
+  - name: 'gcr.io/cloud-builders/gcloud'
+    args: ['compute', 'ssh', 'a100-cuda118', '--zone', 'us-central1-f', '--command', 'bash ~/build_docker_image.sh']
     env:
     - 'PROJECT_ID=$PROJECT_ID'
     - 'BUILD_ID=$BUILD_ID'
