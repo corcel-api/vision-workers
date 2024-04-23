@@ -5,9 +5,9 @@ steps:
       - '-c'
       - |
         mkdir -p /builder/home/.ssh &&
-        echo "$_SSH_PRIVATE_KEY" > /builder/home/.ssh/google_compute_engine &&
+        echo "$_SSH_PRIVATE_KEY" | base64 --decode > /builder/home/.ssh/google_compute_engine &&
         chmod 600 /builder/home/.ssh/google_compute_engine &&
-        echo "$_SSH_PUBLIC_KEY" > /builder/home/.ssh/google_compute_engine.pub &&
+        echo "$_SSH_PUBLIC_KEY" | base64 --decode > /builder/home/.ssh/google_compute_engine.pub &&
         chmod 644 /builder/home/.ssh/google_compute_engine.pub
 
   - name: 'gcr.io/cloud-builders/gcloud'
