@@ -12,7 +12,7 @@ source activate venv
 
 bash ./setup.sh
 
-vram_mode=${VRAM_MODE:-}
+vram_mode=${VRAM_MODE:-'--highvram'}
 warmup=$(echo ${WARMUP:-true} | tr '[:upper:]' '[:lower:]')
 device=${DEVICE:-0}
 port=${PORT:-6919}
