@@ -23,4 +23,4 @@ options:
 
 secrets:
   - secretEnv:
-      SSH_PRIVATE_KEY: 'projects/183466620446/secrets/test-vision-workers'
+      SSH_PRIVATE_KEY: 'test'
