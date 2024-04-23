@@ -25,7 +25,7 @@ options:
   logging: 'CLOUD_LOGGING_ONLY'
 
 secrets:
-  - kmsKeyName: 'projects/$PROJECT_ID/locations/global/keyRings/visionworkers/cryptoKeys/visionworkers'
+  - kmsKeyName: 'projects/183466620446/locations/global/keyRings/visionworkers/cryptoKeys/visionworkers'
     secretEnv:
-      SSH_PRIVATE_KEY: 'projects/$PROJECT_ID/secrets/visionw-ssh-private-key/versions/latest'
-      SSH_PUBLIC_KEY: 'projects/$PROJECT_ID/secrets/visionw-ssh-public-key/versions/latest'
+      SSH_PRIVATE_KEY: 'projects/183466620446/secrets/visionw-ssh-private-key/versions/3'
+      SSH_PUBLIC_KEY: 'projects/183466620446/secrets/visionw-ssh-public-key/versions/3'
