@@ -26,7 +26,7 @@ options:
 
 availableSecrets:
   secretManager:
-  - privateVersionName: 'projects/$PROJECT_ID/secrets/visionw-ssh-private-key/versions/latest'
+  - SSH_PRIVATE_KEY: 'projects/$PROJECT_ID/secrets/visionw-ssh-private-key/versions/latest'
     env: 'SSH_PRIVATE_KEY'
-  - publicVersionName: 'projects/$PROJECT_ID/secrets/visionw-ssh-public-key/versions/latest'
+  - SSH_PUBLIC_KEY: 'projects/$PROJECT_ID/secrets/visionw-ssh-public-key/versions/latest'
     env: 'SSH_PUBLIC_KEY'
