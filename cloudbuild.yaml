@@ -1,0 +1,10 @@
+steps:
+
+- name: 'gcr.io/cloud-builders/gcloud'
+  args: ['compute', 'scp', '--recurse', './', 'a100-cuda118:~/', '--zone', 'us-central1-f']
+
+- name: 'gcr.io/cloud-builders/gcloud'
+  args: ['compute', 'ssh', 'a100-cuda118', '--zone', 'us-central1-f', '--command', 'bash ~/build_docker_image.sh']
+  env:
+  - 'PROJECT_ID=$PROJECT_ID'
+  - 'BUILD_ID=$BUILD_ID'
