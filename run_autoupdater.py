@@ -84,17 +84,15 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     auto_updates_sleep = int(os.getenv('AUTOUP_SLEEP', '60'))
-    current_env = os.getenv('CURRENT_ENV', 'dev').lower()
-    branch = os.getenv('GIT_BRANCH', 'main' if current_env == 'prod' else 'dev')
-    server_special_token = os.getenv('SERVER_RELOAD_GIT_TOKEN', 'none')
-    env_autoup_token = "_prod" if current_env == "prod" else "_dev"
+    branch = os.getenv('GIT_BRANCH', 'main')
+    server_special_token = os.getenv('SERVER_RELOAD_GIT_TOKEN', 'reload_orch')
+    env_autoup_token = os.getenv('ENV_TOKEN_AUTOUP', '_prod')
 
     orchestrator_port = int(os.getenv('CURRENT_SERVER_PORT', 6920))
     service_port = int(os.getenv('SERVICE_SERVER_PORT', 6919))
     comfyui_port = int(os.getenv('COMFYUI_SERVER_PORT', 8188))
 
-    logging.info(f"\nEnvironment: {current_env.upper()}")
-    logging.info(f"Listening for Git tag updates on branch '{branch}' with tags containing the tokens: '{env_autoup_token}, {server_special_token}'\n")
+    logging.info(f"Listening for Git tag updates with tags containing the token: '{env_autoup_token}, and only reloading if the token {server_special_token} is specified")
 
     run_autoupdate(
         restart_script=args.restart_script,
