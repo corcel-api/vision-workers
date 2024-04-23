@@ -14,6 +14,7 @@ import os
 import copy
 import random
 
+from loguru import logger
 
 def _extract_positive_and_negative_prompts(
     text_prompts: List[Dict[str, Any]],
@@ -46,7 +47,7 @@ class PayloadModifier:
                         data = json.load(file)
                         self._payloads[os.path.splitext(filename)[0]] = data
                     except json.JSONDecodeError as e:
-                        print(f"Error decoding JSON from {filename}: {e}")
+                        logger.error(f"Error decoding JSON from {filename}: {e}")
 
     def modify_inpaint(self, input_data: InpaintingBase) -> Dict[str, Any]:
         payload = copy.deepcopy(self._payloads["inpaint"])

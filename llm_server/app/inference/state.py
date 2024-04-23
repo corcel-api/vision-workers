@@ -71,10 +71,9 @@ class EngineState:
         cache_info = scan_cache_dir()
         to_clean = []
         for repo in cache_info.repos:
-            print(f"{repo.size_on_disk_str:>8}", repo.repo_id)
             to_clean += [revision.commit_hash for revision in repo.revisions]
         delete_strategy = cache_info.delete_revisions(*to_clean)
-        print(f"Will free {delete_strategy.expected_freed_size_str}.")
+        logging.info(f"Will free {delete_strategy.expected_freed_size_str}.")
         delete_strategy.execute()
 
     # TODO: WHY IS THIS NEEDED?
