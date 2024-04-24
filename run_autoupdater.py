@@ -13,7 +13,9 @@ def _initialize_git_if_needed(repo_url: str, branch: str) -> None:
         subprocess.run(["git", "init"], check=True)
         subprocess.run(["git", "remote", "add", "origin", repo_url], check=True)
         subprocess.run(["git", "fetch"], check=True)
-        subprocess.run(["git", "checkout", f"origin/{branch}"], check=True)
+        subprocess.run(["git", "reset", "--hard"], check=True)
+        subprocess.run(["git", "clean", "-fd"], check=True)
+        subprocess.run(["git", "checkout", branch], check=True)
         subprocess.run(["git", "branch", "--set-upstream-to=origin/{branch}", branch], check=True)
 
     else:
