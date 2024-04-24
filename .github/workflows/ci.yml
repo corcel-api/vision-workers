@@ -56,23 +56,23 @@ jobs:
         id: deploy
         run: |
           response=$(curl -X POST https://runpod-manager.onrender.com/create-instance \
-                    -H "Content-Type: application/json" \
-                    -H "API_KEY: ${{ secrets.RUNPOD_MANAGER_API_KEY }}" \
-                    -d '{
-                      "instance_name": "vision-workers-ci-build-${{ github.run_id }}",
-                      "gpu_type": "${{ secrets.RUNPOD_GPU_TYPE }}",
-                      "disk_volume": 500,
-                      "docker_image": "corcelio/cicd:${{ github.run_id }}",
-                      "ports": "6920/http",
-                      "cuda_versions": [
-                        "11.8",
-                        "12.0",
-                        "12.1",
-                        "12.2",
-                        "12.3"
-                      ],
-                      "env_vars": {}
-                    }' --fail --connect-timeout 1000)
+                          -H "Content-Type: application/json" \
+                          -H "API_KEY: ${{ secrets.RUNPOD_MANAGER_API_KEY }}" \
+                          -d '{
+                            "instance_name": "vision-workers-ci-build-${{ github.run_id }}",
+                            "gpu_type": "${{ secrets.RUNPOD_GPU_TYPE }}",
+                            "disk_volume": 500,
+                            "docker_image": "corcelio/cicd:${{ github.run_id }}",
+                            "ports": "6920/http",
+                            "cuda_versions": [
+                              "11.8",
+                              "12.0",
+                              "12.1",
+                              "12.2",
+                              "12.3"
+                            ],
+                            "env_vars": {}
+                          }' --fail --connect-timeout 1000)
           instance_id=$(echo "$response" | jq -r '.id')
           echo "::set-output name=instance_id::$instance_id"
         timeout-minutes: 30
@@ -82,11 +82,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Test Runpod Orchestrator LLM
-        env:
-          INSTANCE_ID: ${{ needs.deploy-runpod-orchestrator.outputs.instance_id }}
-          PORT_ORCH: ${{ secrets.PORT_ORCH }}
-          TEST_ORCH_LLM_QUERY: ${{ secrets.TEST_ORCH_LLM_QUERY }}
-
         run: |
-          curl -X POST https://$INSTANCE_ID-$PORT_ORCH.proxy.runpod.net/check-result \
-                -d '$TEST_ORCH_LLM_QUERY' --fail --connect-timeout 500
+          curl -X POST https://${{ needs.deploy-runpod-orchestrator.outputs.instance_id }}-${{ secrets.PORT_ORCH }}.proxy.runpod.net/check-result \
+                -H "Content-Type: application/json" \
+                -d '${{ secrets.TEST_ORCH_LLM_QUERY }}' --fail --connect-timeout 500
