@@ -125,7 +125,7 @@ jobs:
           command: |
             curl -f -X POST https://${{ needs.test-runpod-orch-image.outputs.instance_id }}-${{ secrets.PORT_LLM }}.proxy.runpod.net/avatar \
                   -H "Content-Type: application/json" \
-                  --data-binary @ci-tests/image-server-test.json
+                  --data-binary @ci-tests/avatar-test.json
     outputs:
       instance_id: ${{ needs.test-runpod-orch-image.outputs.instance_id }}
 
