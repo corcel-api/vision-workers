@@ -79,26 +79,63 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v2
 
-      - name: Test Runpod Image
+      - name: Test Runpod Orchestrator - LLM
         uses: nick-fields/retry@v3
         with:
           max_attempts: 3
           timeout_minutes: 10
           command: |
-            curl -X POST https://${{ needs.deploy-runpod-orchestrator.outputs.instance_id }}-${{ secrets.PORT_LLM }}.proxy.runpod.net/load_model \
+            curl -X POST https://${{ needs.deploy-runpod-orchestrator.outputs.instance_id }}-${{ secrets.PORT_ORCH }}.proxy.runpod.net/check-result \
                   -H "Content-Type: application/json" \
-                  --data-binary @ci-tests/image-server-test.json
-
+                  -d "${{ secrets.TEST_ORCH_LLM_QUERY }}"
     outputs:
       instance_id: ${{ needs.deploy-runpod-orchestrator.outputs.instance_id }}
+  
+  test-runpod-orch-image:
+    needs: test-runpod-orch-llm
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v2
+
+      - name: Test Runpod Orchestrator - Image
+        uses: nick-fields/retry@v3
+        with:
+          max_attempts: 3
+          timeout_minutes: 10
+          command: |
+            curl -X POST https://${{ needs.deploy-runpod-orchestrator.outputs.instance_id }}-${{ secrets.PORT_ORCH }}.proxy.runpod.net/check-result \
+                  -H "Content-Type: application/json" \
+                  --data-binary @ci-tests/image-server-test.json
+    outputs:
+      instance_id: ${{ needs.test-runpod-orch-llm.outputs.instance_id }}
+
+  test-runpod-orch-avatar:
+    needs: test-runpod-orch-image
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v2
+
+      - name: Test Runpod Orchestrator - Image - Avatar
+        uses: nick-fields/retry@v3
+        with:
+          max_attempts: 3
+          timeout_minutes: 10
+          command: |
+            curl -X POST https://${{ needs.deploy-runpod-orchestrator.outputs.instance_id }}-${{ secrets.PORT_LLM }}.proxy.runpod.net/avatar \
+                  -H "Content-Type: application/json" \
+                  --data-binary @ci-tests/image-server-test.json
+    outputs:
+      instance_id: ${{ needs.test-runpod-orch-image.outputs.instance_id }}
 
   destroy-runpod-orch:
-    needs: test-runpod-orch-llm
+    needs: test-runpod-orch-avatar
     runs-on: ubuntu-latest
     steps:
       - name: Destroy Orchestrator runpod instance
         run: |
-          curl -X DELETE https://runpod-manager.onrender.com/delete-instance/${{ needs.test-runpod-orch-llm.outputs.instance_id }} \
+          curl -X DELETE https://runpod-manager.onrender.com/delete-instance/${{ needs.test-runpod-orch-avatar.outputs.instance_id }} \
                -H "API_KEY: ${{ secrets.RUNPOD_MANAGER_API_KEY }}"
         timeout-minutes: 1
 
