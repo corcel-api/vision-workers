@@ -101,7 +101,10 @@ if __name__ == "__main__":
     git_branch = os.getenv('BRANCH', 'feature/auto-updates')
     git_repo = os.getenv('GIT_REPO', 'corcel-api/vision-workers') 
     git_pat = os.getenv('GIT_PAT', '')
-    repo_url = f"https://{git_pat}@github.com/{git_repo}.git"
+    if git_pat != '':
+        repo_url = f"https://{git_pat}@github.com/{git_repo}.git"
+    else:
+        repo_url = f"https://github.com/{git_repo}.git"
 
 
     orchestrator_port = int(os.getenv('CURRENT_SERVER_PORT', 6920))
