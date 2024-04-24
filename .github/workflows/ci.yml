@@ -6,7 +6,6 @@ on: [push, pull_request]
 jobs:
   build:
     runs-on: ubuntu-latest
-    
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -21,7 +20,7 @@ jobs:
           echo "$SSH_PUBLIC_KEY" | base64 --decode > /home/runner/.ssh/google_compute_engine.pub
           chmod 600 ~/.ssh/google_compute_engine
           chmod 644 ~/.ssh/google_compute_engine.pub
-      
+
       - name: Set up Cloud SDK
         uses: google-github-actions/setup-gcloud@v0.3.0
         with:
@@ -47,22 +46,22 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     outputs:
-      instance_id: ${{ steps.deploy.outputs.instance_id }}
+      instance_id: ${{ steps.deploy-orch.outputs.instance_id }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
         
       - name: Deploy to Runpod
-        id: deploy
+        id: deploy-orch
         run: |
           response=$(curl -X POST https://runpod-manager.onrender.com/create-instance \
                           -H "Content-Type: application/json" \
                           -H "API_KEY: ${{ secrets.RUNPOD_MANAGER_API_KEY }}" \
                           -d '{
-                            "instance_name": "vision-workers-ci-build-${{ github.run_id }}",
+                            "instance_name": "vision-workers-ci-build-orch-${{ github.run_id }}",
                             "gpu_type": "${{ secrets.RUNPOD_GPU_TYPE }}",
                             "disk_volume": 500,
-                            "docker_image": "corcelio/cicd:${{ github.run_id }}",
+                            "docker_image": "corcelio/cicd:orchestrator-${{ github.run_id }}",
                             "ports": "6920/http",
                             "cuda_versions": [
                               "11.8",
@@ -72,7 +71,7 @@ jobs:
                               "12.3"
                             ],
                             "env_vars": {}
-                          }' --fail --connect-timeout 1000)
+                          }')
           instance_id=$(echo "$response" | jq -r '.id')
           echo "::set-output name=instance_id::$instance_id"
         timeout-minutes: 30
@@ -82,18 +81,83 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Test Runpod Orchestrator LLM
+        id: test-runpod-orchestrator
         run: |
           curl -X POST https://${{ needs.deploy-runpod-orchestrator.outputs.instance_id }}-${{ secrets.PORT_ORCH }}.proxy.runpod.net/check-result \
                 -H "Content-Type: application/json" \
                 -d '${{ secrets.TEST_ORCH_LLM_QUERY }}' --fail --connect-timeout 500
         timeout-minutes: 20
+    outputs:
+      instance_id: ${{ needs.deploy-runpod-orchestrator.outputs.instance_id }}
 
-  destroy-runpod:
+  destroy-runpod-orch:
     needs: test-runpod-orch-llm
     runs-on: ubuntu-latest
     steps:
       - name: Destroy Orchestrator runpod instance
         run: |
-          curl -X DELETE https://runpod-manager.onrender.com/delete-instance/${{ needs.deploy-runpod-orchestrator.outputs.instance_id }} \
+          curl -X DELETE https://runpod-manager.onrender.com/delete-instance/${{ needs.test-runpod-orch-llm.outputs.instance_id }} \
+               -H "API_KEY: ${{ secrets.RUNPOD_MANAGER_API_KEY }}"
+        timeout-minutes: 1
+
+
+  deploy-runpod-llm-server:
+    needs: build
+    runs-on: ubuntu-latest
+    outputs:
+      instance_id: ${{ steps.deploy-llm.outputs.instance_id }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        
+      - name: Deploy to Runpod
+        id: deploy-llm
+        run: |
+          response=$(curl -X POST https://runpod-manager.onrender.com/create-instance \
+                          -H "Content-Type: application/json" \
+                          -H "API_KEY: ${{ secrets.RUNPOD_MANAGER_API_KEY }}" \
+                          -d '{
+                            "instance_name": "vision-workers-ci-build-llm-${{ github.run_id }}",
+                            "gpu_type": "${{ secrets.RUNPOD_GPU_TYPE }}",
+                            "disk_volume": 500,
+                            "docker_image": "corcelio/cicd:llm-server-${{ github.run_id }}",
+                            "ports": "6919/http",
+                            "cuda_versions": [
+                              "11.8",
+                              "12.0",
+                              "12.1",
+                              "12.2",
+                              "12.3"
+                            ],
+                            "env_vars": {}
+                          }')
+          instance_id=$(echo "$response" | jq -r '.id')
+          echo "::set-output name=instance_id::$instance_id"
+        timeout-minutes: 30
+
+  test-runpod-llm:
+    needs: deploy-runpod-llm-server
+    runs-on: ubuntu-latest
+    steps:
+      - name: Test Runpod LLM
+        id: test-runpod-llm
+        run: |
+          curl -X POST https://${{ needs.deploy-runpod-llm-server.outputs.instance_id }}-${{ secrets.PORT_LLM }}.proxy.runpod.net/load_model \
+                -H "Content-Type: application/json" \
+                -d '${{ secrets.TEST_LLM_LOAD_QUERY }}'
+          curl -X POST https://${{ needs.deploy-runpod-llm-server.outputs.instance_id }}-${{ secrets.PORT_LLM }}.proxy.runpod.net/generate_text \
+                -H "Content-Type: application/json" \
+                -d '${{ secrets.TEST_LLM_CHAT_QUERY }}'
+        timeout-minutes: 10
+    outputs:
+      instance_id: ${{ needs.deploy-runpod-llm-server.outputs.instance_id }}
+
+  destroy-runpod-llm:
+    needs: test-runpod-llm
+    runs-on: ubuntu-latest
+    steps:
+      - name: Destroy Orchestrator runpod instance
+        run: |
+          curl -X DELETE https://runpod-manager.onrender.com/delete-instance/${{ needs.test-runpod-llm.outputs.instance_id }} \
                -H "API_KEY: ${{ secrets.RUNPOD_MANAGER_API_KEY }}"
         timeout-minutes: 1
