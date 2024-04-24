@@ -73,7 +73,6 @@ jobs:
           echo "::set-output name=instance_id::$instance_id"
         timeout-minutes: 30
 
-jobs:
   test-runpod-orch-llm:
     needs: deploy-runpod-orchestrator
     runs-on: ubuntu-latest
