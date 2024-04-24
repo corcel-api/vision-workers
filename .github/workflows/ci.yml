@@ -1,4 +1,5 @@
-name: CI Workflow
+
+name: Deploy Code
 
 on: [push, pull_request]
 
@@ -28,12 +29,14 @@ jobs:
           service_account_key: ${{ secrets.GCP_SA_KEY }}
           export_default_credentials: true
 
-      - name: Copy files to remote server
-        run: gcloud compute scp --recurse * a100-cuda118:~/ --zone us-central1-f
-        
-      - name: Run script on remote server
-        run: gcloud compute ssh a100-cuda118 --zone us-central1-f --command "export PROJECT_ID=${{ secrets.PROJECT_ID }}; export BUILD_ID=${{ github.run_id }}; bash ~/vision-workers/build-docker-ci-remote.sh"
+      - name: Clear remote directory
+        run: gcloud compute ssh a100-cuda118 --zone us-central1-f --command "rm -rf ~/*"
 
+      - name: Copy updated repository to remote server
+        run: gcloud compute scp --recurse /home/runner/work/vision-workers/vision-workers a100-cuda118:~/ --zone us-central1-f
+
+      - name: Run script on remote server
+        run: gcloud compute ssh a100-cuda118 --zone us-central1-f --command "bash /path/to/remote/directory/build_docker_image.sh"
         env:
           PROJECT_ID: ${{ secrets.PROJECT_ID }}
           BUILD_ID: ${{ github.run_id }}
