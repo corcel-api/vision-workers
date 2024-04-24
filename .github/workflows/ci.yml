@@ -51,7 +51,7 @@ jobs:
         
       - name: Deploy to Runpod
         run: |
-          curl -X POST https://runpod-manager.onrender.com \
+          curl -X POST https://runpod-manager.onrender.com/create-instance \
           -H "Content-Type: application/json" \
           -H "Authorization: Bearer ${{ secrets.RUNPOD_MANAGER_API_KEY }}" \
           -d '{
