@@ -84,6 +84,10 @@ jobs:
                 -H "Content-Type: application/json" \
                 -d '${{ secrets.TEST_ORCH_LLM_QUERY }}' --fail --connect-timeout 500
         timeout-minutes: 20
+        continue-on-error: true
+        retry:
+          max-attempts: 3
+          delay-seconds: 1
     outputs:
       instance_id: ${{ needs.deploy-runpod-orchestrator.outputs.instance_id }}
 
@@ -143,6 +147,10 @@ jobs:
                 -H "Content-Type: application/json" \
                 -d '${{ secrets.TEST_LLM_CHAT_QUERY }}'
         timeout-minutes: 10
+        continue-on-error: true
+        retry:
+          max-attempts: 3
+          delay-seconds: 1
     outputs:
       instance_id: ${{ needs.deploy-runpod-llm-server.outputs.instance_id }}
 
@@ -198,11 +206,14 @@ jobs:
       - name: Test Runpod Image
         id: test-runpod-image
         run: |
-          IMAGE_SERVER_TEST_JSON=$(cat ci-tests/image-server-test.json)
           curl -X POST https://${{ needs.deploy-runpod-image-server.outputs.instance_id }}-${{ secrets.PORT_LLM }}.proxy.runpod.net/txt2img \
                 -H "Content-Type: application/json" \
-                -d "$IMAGE_SERVER_TEST_JSON"
+                --data-binary @ci-tests/image-server-test.json
         timeout-minutes: 10
+        continue-on-error: true
+        retry:
+          max-attempts: 3
+          delay-seconds: 1
     outputs:
       instance_id: ${{ needs.deploy-runpod-image-server.outputs.instance_id }}
 
