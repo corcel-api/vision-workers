@@ -44,28 +44,28 @@ jobs:
           DOCKER_PASSW: ${{ secrets.DOCKER_PASSW }}
   
   deploy-runpod:
-  runs-on: ubuntu-latest
-  steps:
-    - name: Checkout code
-      uses: actions/checkout@v3
-      
-    - name: Deploy to Runpod
-      run: |
-        curl -X POST https://runpod-manager.onrender.com \
-        -H "Content-Type: application/json" \
-        -H "Authorization: Bearer ${{ secrets.RUNPOD_MANAGER_API_KEY }}" \
-        -d '{
-          "instance_name": "vision-workers-ci-build-${{ github.run_id }}",
-          "gpu_type": "NVIDIA A100 80GB PCIe",
-          "disk_volume": 500,
-          "docker_image": "corcelio/test:${{ github.run_id }}",
-          "ports": "6920/http",
-          "cuda_versions": [
-            "12.0",
-            "12.1",
-            "12.2",
-            "12.3"
-          ]
-        }' --fail --connect-timeout 1000
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        
+      - name: Deploy to Runpod
+        run: |
+          curl -X POST https://runpod-manager.onrender.com \
+          -H "Content-Type: application/json" \
+          -H "Authorization: Bearer ${{ secrets.RUNPOD_MANAGER_API_KEY }}" \
+          -d '{
+            "instance_name": "vision-workers-ci-build-${{ github.run_id }}",
+            "gpu_type": "NVIDIA A100 80GB PCIe",
+            "disk_volume": 500,
+            "docker_image": "corcelio/cicd:${{ github.run_id }}",
+            "ports": "6920/http",
+            "cuda_versions": [
+              "12.0",
+              "12.1",
+              "12.2",
+              "12.3"
+            ]
+          }' --fail --connect-timeout 1000
 
-      timeout-minutes: 30
+        timeout-minutes: 30
