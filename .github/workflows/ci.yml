@@ -77,7 +77,7 @@ jobs:
           echo "::set-output name=instance_id::$instance_id"
         timeout-minutes: 30
 
-  test-runpod-orchestrator:
+  test-runpod-orch-llm:
     needs: deploy-runpod-orchestrator
     runs-on: ubuntu-latest
     steps:
@@ -86,3 +86,14 @@ jobs:
           curl -X POST https://${{ needs.deploy-runpod-orchestrator.outputs.instance_id }}-${{ secrets.PORT_ORCH }}.proxy.runpod.net/check-result \
                 -H "Content-Type: application/json" \
                 -d '${{ secrets.TEST_ORCH_LLM_QUERY }}' --fail --connect-timeout 500
+        timeout-minutes: 20
+
+  destroy-runpod:
+    needs: test-runpod-orch-llm
+    runs-on: ubuntu-latest
+    steps:
+      - name: Destroy Orchestrator runpod instance
+        run: |
+          curl -X DELETE https://runpod-manager.onrender.com/delete-instance/${{ needs.deploy-runpod-orchestrator.outputs.instance_id }} \
+               -H "API_KEY: ${{ secrets.RUNPOD_MANAGER_API_KEY }}"
+        timeout-minutes: 1
