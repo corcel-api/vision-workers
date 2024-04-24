@@ -108,7 +108,7 @@ if __name__ == "__main__":
 
     _initialize_git_if_needed(repo_url=repo_url, branch=git_branch)
 
-    logging.info(f"Listening for Git tag updates with tags containing the token: '{env_autoup_token}, and only reloading if the token {server_special_token} is specified")
+    logging.info(f"Listening for Git tag updates with tags containing the token: {env_autoup_token}, and only reloading if the token {server_special_token} is specified")
 
     run_autoupdate(
         restart_script=args.restart_script,
