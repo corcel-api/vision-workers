@@ -104,7 +104,7 @@ jobs:
           max_attempts: 3
           timeout_minutes: 10
           command: |
-            curl -X POST https://${{ needs.deploy-runpod-orchestrator.outputs.instance_id }}-${{ secrets.PORT_ORCH }}.proxy.runpod.net/check-result \
+            curl -X POST https://${{ needs.test-runpod-orch-llm.outputs.instance_id }}-${{ secrets.PORT_ORCH }}.proxy.runpod.net/check-result \
                   -H "Content-Type: application/json" \
                   --data-binary @ci-tests/image-server-test.json
     outputs:
@@ -123,7 +123,7 @@ jobs:
           max_attempts: 3
           timeout_minutes: 10
           command: |
-            curl -X POST https://${{ needs.deploy-runpod-orchestrator.outputs.instance_id }}-${{ secrets.PORT_LLM }}.proxy.runpod.net/avatar \
+            curl -X POST https://${{ needs.test-runpod-orch-image.outputs.instance_id }}-${{ secrets.PORT_LLM }}.proxy.runpod.net/avatar \
                   -H "Content-Type: application/json" \
                   --data-binary @ci-tests/image-server-test.json
     outputs:
