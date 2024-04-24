@@ -87,7 +87,7 @@ jobs:
           command: |
             curl -X POST https://${{ needs.deploy-runpod-orchestrator.outputs.instance_id }}-${{ secrets.PORT_ORCH }}.proxy.runpod.net/check-result \
                   -H "Content-Type: application/json" \
-                  -d "${{ secrets.TEST_ORCH_LLM_QUERY }}"
+                  -d '${{ secrets.TEST_ORCH_LLM_QUERY }}'
     outputs:
       instance_id: ${{ needs.deploy-runpod-orchestrator.outputs.instance_id }}
   
