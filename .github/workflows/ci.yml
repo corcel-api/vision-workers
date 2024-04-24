@@ -1,10 +1,9 @@
-
-name: Deploy Code
+name: Vision Workers CICD
 
 on: [push, pull_request]
 
 jobs:
-  build:
+  build-all:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -93,7 +92,6 @@ jobs:
     outputs:
       instance_id: ${{ needs.deploy-runpod-orchestrator.outputs.instance_id }}
 
-
   destroy-runpod-orch:
     needs: test-runpod-orch-llm
     runs-on: ubuntu-latest
@@ -103,7 +101,6 @@ jobs:
           curl -X DELETE https://runpod-manager.onrender.com/delete-instance/${{ needs.test-runpod-orch-llm.outputs.instance_id }} \
                -H "API_KEY: ${{ secrets.RUNPOD_MANAGER_API_KEY }}"
         timeout-minutes: 1
-
 
   deploy-runpod-llm-server:
     needs: build
@@ -140,20 +137,22 @@ jobs:
     needs: deploy-runpod-llm-server
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v2
+
       - name: Test Runpod LLM
-        id: test-runpod-llm
-        run: |
-          curl -X POST https://${{ needs.deploy-runpod-llm-server.outputs.instance_id }}-${{ secrets.PORT_LLM }}.proxy.runpod.net/load_model \
-                -H "Content-Type: application/json" \
-                -d '${{ secrets.TEST_LLM_LOAD_QUERY }}'
-          curl -X POST https://${{ needs.deploy-runpod-llm-server.outputs.instance_id }}-${{ secrets.PORT_LLM }}.proxy.runpod.net/generate_text \
-                -H "Content-Type: application/json" \
-                -d '${{ secrets.TEST_LLM_CHAT_QUERY }}'
-        timeout-minutes: 10
-        continue-on-error: true
-        retry:
-          max-attempts: 3
-          delay-seconds: 1
+        uses: nick-fields/retry@v3
+        with:
+          max_attempts: 3
+          timeout_minutes: 10
+          command: |
+            curl -X POST https://${{ needs.deploy-runpod-llm-server.outputs.instance_id }}-${{ secrets.PORT_LLM }}.proxy.runpod.net/load_model \
+                  -H "Content-Type: application/json" \
+                  -d '${{ secrets.TEST_LLM_LOAD_QUERY }}'
+            curl -X POST https://${{ needs.deploy-runpod-llm-server.outputs.instance_id }}-${{ secrets.PORT_LLM }}.proxy.runpod.net/generate_text \
+                  -H "Content-Type: application/json" \
+                  -d '${{ secrets.TEST_LLM_CHAT_QUERY }}'
+
     outputs:
       instance_id: ${{ needs.deploy-runpod-llm-server.outputs.instance_id }}
 
@@ -167,7 +166,6 @@ jobs:
                -H "API_KEY: ${{ secrets.RUNPOD_MANAGER_API_KEY }}"
         timeout-minutes: 1
 
-  
   deploy-runpod-image-server:
     needs: build
     runs-on: ubuntu-latest
@@ -203,20 +201,19 @@ jobs:
     needs: deploy-runpod-image-server
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
+      - name: Checkout Repository
+        uses: actions/checkout@v2
 
       - name: Test Runpod Image
-        id: test-runpod-image
-        run: |
-          curl -X POST https://${{ needs.deploy-runpod-image-server.outputs.instance_id }}-${{ secrets.PORT_LLM }}.proxy.runpod.net/txt2img \
+        uses: nick-fields/retry@v3
+        with:
+          max_attempts: 3
+          timeout_minutes: 10
+          command: |
+            curl -X POST https://${{ needs.deploy-runpod-image-server.outputs.instance_id }}-${{ secrets.PORT_LLM }}.proxy.runpod.net/txt2img \
                 -H "Content-Type: application/json" \
                 --data-binary @ci-tests/image-server-test.json
-        timeout-minutes: 10
-        continue-on-error: true
-        retry:
-          max-attempts: 3
-          delay-seconds: 1
+
     outputs:
       instance_id: ${{ needs.deploy-runpod-image-server.outputs.instance_id }}
 
