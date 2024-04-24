@@ -42,7 +42,7 @@ jobs:
           DOCKER_PASSW: ${{ secrets.DOCKER_PASSW }}
   
   deploy-runpod-orchestrator:
-    needs: build
+    needs: build-all
     runs-on: ubuntu-latest
     outputs:
       instance_id: ${{ steps.deploy-orch.outputs.instance_id }}
@@ -103,7 +103,7 @@ jobs:
         timeout-minutes: 1
 
   deploy-runpod-llm-server:
-    needs: build
+    needs: build-all
     runs-on: ubuntu-latest
     outputs:
       instance_id: ${{ steps.deploy-llm.outputs.instance_id }}
@@ -167,7 +167,7 @@ jobs:
         timeout-minutes: 1
 
   deploy-runpod-image-server:
-    needs: build
+    needs: build-all
     runs-on: ubuntu-latest
     outputs:
       instance_id: ${{ steps.deploy-image.outputs.instance_id }}
