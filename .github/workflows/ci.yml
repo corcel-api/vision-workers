@@ -75,19 +75,14 @@ jobs:
 
   test-runpod-orch-llm:
     needs: deploy-runpod-orchestrator
-    runs-on: ubuntu-latest
-    steps:
-      - name: Test Runpod Orchestrator LLM
-        id: test-runpod-orchestrator
-        run: |
+    uses: nick-fields/retry@v3.0.0
+    with:
+      timeout_minutes: 20
+      max_attempts: 3
+      command: |
           curl -X POST https://${{ needs.deploy-runpod-orchestrator.outputs.instance_id }}-${{ secrets.PORT_ORCH }}.proxy.runpod.net/check-result \
                 -H "Content-Type: application/json" \
                 -d '${{ secrets.TEST_ORCH_LLM_QUERY }}' --fail --connect-timeout 500
-        timeout-minutes: 20
-        continue-on-error: true
-        retry:
-          max-attempts: 3
-          delay-seconds: 1
     outputs:
       instance_id: ${{ needs.deploy-runpod-orchestrator.outputs.instance_id }}
 
