@@ -70,7 +70,7 @@ def run_autoupdate(restart_script: str, env_autoup_token: str, server_special_to
     while True:
         _fetch_latest_tags(branch)
         local_tag = _get_latest_tag()
-        remote_tag = _get_latest_remote_tag()
+        remote_tag = _get_latest_remote_tag(branch)
 
         if _should_update(local_tag, remote_tag) and _contains_special_token(remote_tag, env_autoup_token):
             logging.info("Local repository is not up-to-date. Updating...")
