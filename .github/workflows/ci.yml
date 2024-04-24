@@ -29,7 +29,7 @@ jobs:
           export_default_credentials: true
 
       - name: Copy files to remote server
-        run: gcloud compute scp --recurse * a100-cuda118:~/ --zone us-central1-f
+        run: gcloud compute scp --recurse /home/runner/ a100-cuda118:~/ --zone us-central1-f
         
       - name: Run script on remote server
         run: gcloud compute ssh a100-cuda118 --zone us-central1-f --command "bash ~/build_docker_image.sh"
