@@ -8,15 +8,12 @@ from typing import List
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 def _get_latest_tag() -> str:
-    return subprocess.getoutput("git describe --tags --abbrev=0")
+    return subprocess.getoutput(f"git describe --tags --abbrev=0")
 
-def _get_latest_remote_tag(branch: str) -> str:
-    subprocess.run(["git", "fetch", "--tags", "origin", branch], check=True)
-    latest_commit = subprocess.getoutput(f"git rev-list --tags --max-count=1 --branches=origin/{branch}")
+def _get_latest_remote_tag(repo: str) -> str:
+    subprocess.run(["git", "fetch", "--tags", repo], check=True)
+    latest_commit = subprocess.getoutput(f"git rev-list --tags --max-count=1")
     return subprocess.getoutput(f"git describe --tags --abbrev=0 {latest_commit}")
-
-def _fetch_latest_tags(branch: str) -> None:
-    subprocess.run(["git", "fetch", "--tags", "origin", branch], check=True)
 
 def _should_update(local_tag: str, remote_tag: str) -> bool:
     logging.info(f"Comparing local tag: {local_tag} to remote tag: {remote_tag}")
@@ -56,11 +53,10 @@ def _print_changes_since_last_tag(local_tag: str, remote_tag: str) -> None:
     else:
         logging.info("No changes were found, or the tags are identical.\n")
 
-def run_autoupdate(restart_script: str, env_autoup_token: str, server_special_token: str, ports_to_kill: List[int], branch: str, auto_updates_sleep: int) -> None:
+def run_autoupdate(restart_script: str, env_autoup_token: str, server_special_token: str, repo_url: str, ports_to_kill: List[int], auto_updates_sleep: int) -> None:
     while True:
-        _fetch_latest_tags(branch)
         local_tag = _get_latest_tag()
-        remote_tag = _get_latest_remote_tag(branch)
+        remote_tag = _get_latest_remote_tag(repo_url)
 
         if _should_update(local_tag, remote_tag) and _contains_special_token(remote_tag, env_autoup_token):
             logging.info("Local repository is not up-to-date. Updating...")
@@ -84,9 +80,12 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     auto_updates_sleep = int(os.getenv('AUTOUP_SLEEP', '60'))
-    branch = os.getenv('GIT_BRANCH', 'main')
     server_special_token = os.getenv('SERVER_RELOAD_GIT_TOKEN', 'reload_orch')
     env_autoup_token = os.getenv('ENV_TOKEN_AUTOUP', '_prod')
+    git_repo = os.getenv('GIT_REPO', 'corcel-api/vision-workers') 
+    git_pat = os.getenv('GIT_PAT', '')
+    repo_url = f"https://{git_pat}@github.com/{git_repo}.git"
+
 
     orchestrator_port = int(os.getenv('CURRENT_SERVER_PORT', 6920))
     service_port = int(os.getenv('SERVICE_SERVER_PORT', 6919))
@@ -98,7 +97,7 @@ if __name__ == "__main__":
         restart_script=args.restart_script,
         env_autoup_token=env_autoup_token,
         server_special_token=server_special_token,
+        repo_url=repo_url,
         ports_to_kill=[orchestrator_port, service_port, comfyui_port],
-        branch=branch,
         auto_updates_sleep=auto_updates_sleep
     )
