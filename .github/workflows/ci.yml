@@ -43,33 +43,50 @@ jobs:
           DOCKER_USER: ${{ secrets.DOCKER_USER }}
           DOCKER_PASSW: ${{ secrets.DOCKER_PASSW }}
   
-  deploy-runpod:
-    needs: build
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-        
-      - name: Deploy to Runpod
-        run: |
-          curl -X POST https://runpod-manager.onrender.com/create-instance \
-          -H "Content-Type: application/json" \
-          -H "API_KEY: ${{ secrets.RUNPOD_MANAGER_API_KEY }}" \
-          -d '{
-            "instance_name": "vision-workers-ci-build-${{ github.run_id }}",
-            "gpu_type": "NVIDIA RTX 6000 Ada Generation",
-            "disk_volume": 500,
-            "docker_image": "corcelio/cicd:${{ github.run_id }}",
-            "ports": "6920/http",
-            "cuda_versions": [
-              "11.8",
-              "12.0",
-              "12.1",
-              "12.2",
-              "12.3"
-            ],
-            "env_vars": {
-            }
-          }' --fail --connect-timeout 1000
+  deploy-runpod-orchestrator:
+  needs: build
+  runs-on: ubuntu-latest
+  outputs:
+    instance_id: ${{ steps.deploy.outputs.instance_id }}
+  steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+      
+    - name: Deploy to Runpod
+      id: deploy
+      run: |
+        response=$(curl -X POST https://runpod-manager.onrender.com/create-instance \
+                  -H "Content-Type: application/json" \
+                  -H "API_KEY: ${{ secrets.RUNPOD_MANAGER_API_KEY }}" \
+                  -d '{
+                    "instance_name": "vision-workers-ci-build-${{ github.run_id }}",
+                    "gpu_type": "NVIDIA RTX 6000 Ada Generation",
+                    "disk_volume": 500,
+                    "docker_image": "corcelio/cicd:${{ github.run_id }}",
+                    "ports": "6920/http",
+                    "cuda_versions": [
+                      "11.8",
+                      "12.0",
+                      "12.1",
+                      "12.2",
+                      "12.3"
+                    ],
+                    "env_vars": {}
+                  }' --fail --connect-timeout 1000)
+        instance_id=$(echo "$response" | jq -r '.id')
+        echo "::set-output name=instance_id::$instance_id"
+      timeout-minutes: 30
 
-        timeout-minutes: 30
+test-runpod-orchestrator:
+  needs: deploy-runpod-orchestrator
+  runs-on: ubuntu-latest
+  steps:
+    - name: Test Runpod Orchestrator LLM
+      env:
+        INSTANCE_ID: ${{ needs.deploy-runpod-orchestrator.outputs.instance_id }}
+        PORT_ORCH: ${{ secrets.PORT_ORCH }}
+        TEST_ORCH_LLM_QUERY: ${{ secrets.TEST_ORCH_LLM_QUERY }}
+
+      run: |
+        curl -X POST https://$INSTANCE_ID-$PORT_ORCH.proxy.runpod.net/ \
+              -d '$TEST_ORCH_LLM_QUERY' --fail --connect-timeout 500
