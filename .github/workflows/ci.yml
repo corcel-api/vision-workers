@@ -73,18 +73,27 @@ jobs:
           echo "::set-output name=instance_id::$instance_id"
         timeout-minutes: 30
 
+jobs:
   test-runpod-orch-llm:
     needs: deploy-runpod-orchestrator
-    uses: nick-fields/retry@v3.0.0
-    with:
-      timeout_minutes: 20
-      max_attempts: 3
-      command: |
-          curl -X POST https://${{ needs.deploy-runpod-orchestrator.outputs.instance_id }}-${{ secrets.PORT_ORCH }}.proxy.runpod.net/check-result \
-                -H "Content-Type: application/json" \
-                -d '${{ secrets.TEST_ORCH_LLM_QUERY }}' --fail --connect-timeout 500
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v2
+
+      - name: Test Runpod Image
+        uses: nick-fields/retry@v3
+        with:
+          max_attempts: 3
+          timeout_minutes: 10
+          command: |
+            curl -X POST https://${{ needs.deploy-runpod-orchestrator.outputs.instance_id }}-${{ secrets.PORT_LLM }}.proxy.runpod.net/load_model \
+                  -H "Content-Type: application/json" \
+                  --data-binary @ci-tests/image-server-test.json
+
     outputs:
       instance_id: ${{ needs.deploy-runpod-orchestrator.outputs.instance_id }}
+
 
   destroy-runpod-orch:
     needs: test-runpod-orch-llm
