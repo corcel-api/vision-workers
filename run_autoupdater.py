@@ -16,8 +16,6 @@ def _initialize_git_if_needed(repo_url: str, branch: str) -> None:
         subprocess.run(["git", "reset", "--hard"], check=True)
         subprocess.run(["git", "clean", "-fd"], check=True)
         subprocess.run(["git", "checkout", branch], check=True)
-        subprocess.run(["git", "branch", "--set-upstream-to=origin/{branch}", branch], check=True)
-
     else:
         logging.info(".git directory already exists.")
 
