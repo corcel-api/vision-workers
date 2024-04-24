@@ -44,6 +44,7 @@ jobs:
           DOCKER_PASSW: ${{ secrets.DOCKER_PASSW }}
   
   deploy-runpod:
+    needs: build
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
