@@ -83,9 +83,9 @@ jobs:
         uses: nick-fields/retry@v3
         with:
           max_attempts: 3
-          timeout_minutes: 10
+          timeout_minutes: 15
           command: |
-            curl -X POST https://${{ needs.deploy-runpod-orchestrator.outputs.instance_id }}-${{ secrets.PORT_ORCH }}.proxy.runpod.net/check-result \
+            curl -f -X POST https://${{ needs.deploy-runpod-orchestrator.outputs.instance_id }}-${{ secrets.PORT_ORCH }}.proxy.runpod.net/check-result \
                   -H "Content-Type: application/json" \
                   -d '${{ secrets.TEST_ORCH_LLM_QUERY }}'
     outputs:
@@ -102,9 +102,9 @@ jobs:
         uses: nick-fields/retry@v3
         with:
           max_attempts: 3
-          timeout_minutes: 10
+          timeout_minutes: 15
           command: |
-            curl -X POST https://${{ needs.test-runpod-orch-llm.outputs.instance_id }}-${{ secrets.PORT_ORCH }}.proxy.runpod.net/check-result \
+            curl -f -X POST https://${{ needs.test-runpod-orch-llm.outputs.instance_id }}-${{ secrets.PORT_ORCH }}.proxy.runpod.net/check-result \
                   -H "Content-Type: application/json" \
                   --data-binary @ci-tests/image-server-test.json
     outputs:
@@ -121,9 +121,9 @@ jobs:
         uses: nick-fields/retry@v3
         with:
           max_attempts: 3
-          timeout_minutes: 10
+          timeout_minutes: 15
           command: |
-            curl -X POST https://${{ needs.test-runpod-orch-image.outputs.instance_id }}-${{ secrets.PORT_LLM }}.proxy.runpod.net/avatar \
+            curl -f -X POST https://${{ needs.test-runpod-orch-image.outputs.instance_id }}-${{ secrets.PORT_LLM }}.proxy.runpod.net/avatar \
                   -H "Content-Type: application/json" \
                   --data-binary @ci-tests/image-server-test.json
     outputs:
@@ -135,7 +135,7 @@ jobs:
     steps:
       - name: Destroy Orchestrator runpod instance
         run: |
-          curl -X DELETE https://runpod-manager.onrender.com/delete-instance/${{ needs.test-runpod-orch-avatar.outputs.instance_id }} \
+          curl -f -X DELETE https://runpod-manager.onrender.com/delete-instance/${{ needs.test-runpod-orch-avatar.outputs.instance_id }} \
                -H "API_KEY: ${{ secrets.RUNPOD_MANAGER_API_KEY }}"
         timeout-minutes: 1
 
@@ -181,12 +181,12 @@ jobs:
         uses: nick-fields/retry@v3
         with:
           max_attempts: 3
-          timeout_minutes: 10
+          timeout_minutes: 15
           command: |
-            curl -X POST https://${{ needs.deploy-runpod-llm-server.outputs.instance_id }}-${{ secrets.PORT_LLM }}.proxy.runpod.net/load_model \
+            curl -f -X POST https://${{ needs.deploy-runpod-llm-server.outputs.instance_id }}-${{ secrets.PORT_LLM }}.proxy.runpod.net/load_model \
                   -H "Content-Type: application/json" \
                   -d '${{ secrets.TEST_LLM_LOAD_QUERY }}'
-            curl -X POST https://${{ needs.deploy-runpod-llm-server.outputs.instance_id }}-${{ secrets.PORT_LLM }}.proxy.runpod.net/generate_text \
+            curl -f -X POST https://${{ needs.deploy-runpod-llm-server.outputs.instance_id }}-${{ secrets.PORT_LLM }}.proxy.runpod.net/generate_text \
                   -H "Content-Type: application/json" \
                   -d '${{ secrets.TEST_LLM_CHAT_QUERY }}'
 
@@ -199,7 +199,7 @@ jobs:
     steps:
       - name: Destroy Orchestrator runpod instance
         run: |
-          curl -X DELETE https://runpod-manager.onrender.com/delete-instance/${{ needs.test-runpod-llm.outputs.instance_id }} \
+          curl -f -X DELETE https://runpod-manager.onrender.com/delete-instance/${{ needs.test-runpod-llm.outputs.instance_id }} \
                -H "API_KEY: ${{ secrets.RUNPOD_MANAGER_API_KEY }}"
         timeout-minutes: 1
 
@@ -245,9 +245,9 @@ jobs:
         uses: nick-fields/retry@v3
         with:
           max_attempts: 3
-          timeout_minutes: 10
+          timeout_minutes: 15
           command: |
-            curl -X POST https://${{ needs.deploy-runpod-image-server.outputs.instance_id }}-${{ secrets.PORT_LLM }}.proxy.runpod.net/txt2img \
+            curl -f -X POST https://${{ needs.deploy-runpod-image-server.outputs.instance_id }}-${{ secrets.PORT_LLM }}.proxy.runpod.net/txt2img \
                 -H "Content-Type: application/json" \
                 --data-binary @ci-tests/image-server-test.json
 
@@ -260,6 +260,6 @@ jobs:
     steps:
       - name: Destroy Image runpod instance
         run: |
-          curl -X DELETE https://runpod-manager.onrender.com/delete-instance/${{ needs.test-runpod-image.outputs.instance_id }} \
+          curl -f -X DELETE https://runpod-manager.onrender.com/delete-instance/${{ needs.test-runpod-image.outputs.instance_id }} \
                -H "API_KEY: ${{ secrets.RUNPOD_MANAGER_API_KEY }}"
         timeout-minutes: 1
