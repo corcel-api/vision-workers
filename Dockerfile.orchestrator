@@ -87,4 +87,4 @@ RUN mkdir /app/cache/
 ENV HF_HOME=/app/cache/
 
 #CMD ["sh", "-c", "cd /app/image_server && ./setup.sh && cd ..  && pm2-runtime start ecosystem_orchestrator.config.js"]
-CMD ["sh", "cd /app/ && pm2-runtime start ecosystem_orchestrator.config.js"]
+CMD ["sh", "-c", "pm2-runtime start ecosystem_orchestrator.config.js"]
