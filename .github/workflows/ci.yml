@@ -120,7 +120,7 @@ jobs:
             gcloud compute ssh l4-cuda121-vision-workers-cd --zone us-central1-a --command "\
               curl -f -X POST localhost:${{ secrets.PORT_ORCH }}/check-result \
               -H 'Content-Type: application/json' \
-              -d '${{ secrets.TEST_ORCH_LLM_QUERY }}'"
+              -d '\${{ secrets.TEST_ORCH_LLM_QUERY }}'"
         env:
           TEST_ORCH_LLM_QUERY: ${{ secrets.TEST_ORCH_LLM_QUERY }}
           PORT_ORCH: ${{ secrets.PORT_ORCH }}
