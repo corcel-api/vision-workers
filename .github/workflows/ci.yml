@@ -43,27 +43,36 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
       - name: Decode SSH keys
-        env:
-          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
-          SSH_PUBLIC_KEY: ${{ secrets.SSH_PUBLIC_KEY }}
         run: |
           mkdir /home/runner/.ssh
           echo "$SSH_PRIVATE_KEY" | base64 --decode > /home/runner/.ssh/google_compute_engine
           echo "$SSH_PUBLIC_KEY" | base64 --decode > /home/runner/.ssh/google_compute_engine.pub
           chmod 600 ~/.ssh/google_compute_engine
           chmod 644 ~/.ssh/google_compute_engine.pub
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          SSH_PUBLIC_KEY: ${{ secrets.SSH_PUBLIC_KEY }}
       - name: Set up Cloud SDK
         uses: google-github-actions/setup-gcloud@v0.3.0
         with:
           project_id: ${{ secrets.GCP_PROJECT_ID }}
           service_account_key: ${{ secrets.GCP_SA_KEY }}
           export_default_credentials: true
-      - name: Clear remote directory
-        run: gcloud compute ssh l4-cuda121-vision-workers-cd --zone us-central1-a --command "docker system prune -a --volumes --force"
       
       - name: Clear remote directory
-        run: gcloud compute ssh l4-cuda121-vision-workers-cd --zone us-central1-a --command "docker run -d --gpus all --runtime=nvidia -p ${{ secrets.PORT_ORCH }}:${{ secrets.PORT_ORCH }} -r ${{ secrets.PORT_LLM }}:${{ secrets.PORT_LLM }} corcelio/cicd:orchestrator-${{ github.run_id }}"
-      
+        run: gcloud compute ssh l4-cuda121-vision-workers-cd --zone us-central1-a --command "docker run -d --gpus all --runtime=nvidia -p ${{ secrets.PORT_ORCH }}:${{ secrets.PORT_ORCH }} -p ${{ secrets.PORT_LLM }}:${{ secrets.PORT_LLM }} corcelio/cicd:orchestrator-${{ github.run_id }}"
+        env:
+          PORT_ORCH: ${{ secrets.PORT_ORCH }}  
+          PORT_LLM: ${{ secrets.PORT_LLM }}  
+
+      - name: Wait for Orchestrator to be ready
+        run: |
+          until curl -f http://localhost:${{ secrets.PORT_ORCH }}/docs; do
+            echo 'Waiting for Orchestrator to be ready...'
+            sleep 5
+          done
+        env:
+          PORT_ORCH: ${{ secrets.PORT_ORCH }}  
 
   test-gcp-orchestrator-llm:
     needs: deploy-gcp-orchestrator
@@ -72,15 +81,15 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
       - name: Decode SSH keys
-        env:
-          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
-          SSH_PUBLIC_KEY: ${{ secrets.SSH_PUBLIC_KEY }}
         run: |
           mkdir /home/runner/.ssh
           echo "$SSH_PRIVATE_KEY" | base64 --decode > /home/runner/.ssh/google_compute_engine
           echo "$SSH_PUBLIC_KEY" | base64 --decode > /home/runner/.ssh/google_compute_engine.pub
           chmod 600 ~/.ssh/google_compute_engine
           chmod 644 ~/.ssh/google_compute_engine.pub
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          SSH_PUBLIC_KEY: ${{ secrets.SSH_PUBLIC_KEY }}
       - name: Set up Cloud SDK
         uses: google-github-actions/setup-gcloud@v0.3.0
         with:
@@ -95,9 +104,12 @@ jobs:
           timeout_minutes: 15
           command: |
             gcloud compute ssh l4-cuda121-vision-workers-cd --zone us-central1-a --command "\
-              curl -f -X POST localhost:\${{ secrets.PORT_ORCH }}/check-result \
+              curl -f -X POST localhost:${{ secrets.PORT_ORCH }}/check-result \
               -H 'Content-Type: application/json' \
-              -d '\${{ secrets.TEST_ORCH_LLM_QUERY }}'"
+              -d '${{ secrets.TEST_ORCH_LLM_QUERY }}'"
+        env:
+          TEST_ORCH_LLM_QUERY: ${{ secrets.TEST_ORCH_LLM_QUERY }}
+          PORT_ORCH: ${{ secrets.PORT_ORCH }}
     
   test-gcp-orchestrator-image:
     needs: test-gcp-orchestrator-llm
@@ -106,15 +118,15 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
       - name: Decode SSH keys
-        env:
-          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
-          SSH_PUBLIC_KEY: ${{ secrets.SSH_PUBLIC_KEY }}
         run: |
           mkdir /home/runner/.ssh
           echo "$SSH_PRIVATE_KEY" | base64 --decode > /home/runner/.ssh/google_compute_engine
           echo "$SSH_PUBLIC_KEY" | base64 --decode > /home/runner/.ssh/google_compute_engine.pub
           chmod 600 ~/.ssh/google_compute_engine
           chmod 644 ~/.ssh/google_compute_engine.pub
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          SSH_PUBLIC_KEY: ${{ secrets.SSH_PUBLIC_KEY }}
       - name: Set up Cloud SDK
         uses: google-github-actions/setup-gcloud@v0.3.0
         with:
@@ -131,9 +143,11 @@ jobs:
           timeout_minutes: 15
           command: |
             gcloud compute ssh l4-cuda121-vision-workers-cd --zone us-central1-a --command "\
-              curl -f -X POST localhost:\${{ secrets.PORT_ORCH }}/check-result \
+              curl -f -X POST localhost:${{ secrets.PORT_ORCH }}/check-result \
               -H 'Content-Type: application/json' \
               --data-binary @~/orch-image-txt2img.json"
+        env:
+          PORT_ORCH: ${{ secrets.PORT_ORCH }}
 
   test-gcp-orchestrator-avatar:
       needs: test-gcp-orchestrator-image
@@ -142,15 +156,15 @@ jobs:
         - name: Checkout code
           uses: actions/checkout@v3
         - name: Decode SSH keys
-          env:
-            SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
-            SSH_PUBLIC_KEY: ${{ secrets.SSH_PUBLIC_KEY }}
           run: |
             mkdir /home/runner/.ssh
             echo "$SSH_PRIVATE_KEY" | base64 --decode > /home/runner/.ssh/google_compute_engine
             echo "$SSH_PUBLIC_KEY" | base64 --decode > /home/runner/.ssh/google_compute_engine.pub
             chmod 600 ~/.ssh/google_compute_engine
             chmod 644 ~/.ssh/google_compute_engine.pub
+          env:
+            SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+            SSH_PUBLIC_KEY: ${{ secrets.SSH_PUBLIC_KEY }}
         - name: Set up Cloud SDK
           uses: google-github-actions/setup-gcloud@v0.3.0
           with:
@@ -167,6 +181,8 @@ jobs:
             timeout_minutes: 15
             command: |
               gcloud compute ssh l4-cuda121-vision-workers-cd --zone us-central1-a --command "\
-                curl -f -X POST localhost:\${{ secrets.PORT_LLM }}/avatar \
+                curl -f -X POST localhost:${{ secrets.PORT_LLM }}/avatar \
                 -H 'Content-Type: application/json' \
                 --data-binary @~/orch-image-txt2img.json"
+          env:
+            PORT_LLM: ${{ secrets.PORT_LLM }}
