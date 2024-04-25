@@ -119,7 +119,7 @@ jobs:
           command: |
             JSON_B64=$(echo '${{ secrets.TEST_ORCH_LLM_QUERY }}' | base64)
             gcloud compute ssh l4-cuda121-vision-workers-cd --zone us-central1-a --command "\
-              echo \$JSON_B64 | base64 --decode > /tmp/query.json; \
+              echo $JSON_B64 | base64 --decode > /tmp/query.json; \
               curl -f -X POST http://localhost:${{ secrets.PORT_ORCH }}/check-result \
               -H 'Content-Type: application/json' \
               -d @/tmp/query.json"
