@@ -99,9 +99,8 @@ jobs:
           project_id: ${{ secrets.GCP_PROJECT_ID }}
           service_account_key: ${{ secrets.GCP_SA_KEY }}
           export_default_credentials: true
-      - name: Copy updated repository to remote server
-          run: gcloud compute scp --recurse /home/runner/work/vision-workers/vision-workers/ci-tests/orch-llm.json l4-cuda121-vision-workers-cd:~/orch-llm.json --zone us-central1-a
-
+      - name: Copy json data for query
+        run: gcloud compute scp --recurse /home/runner/work/vision-workers/vision-workers/ci-tests/orch-llm.json l4-cuda121-vision-workers-cd:~/orch-llm.json --zone us-central1-a
       - name: Test Runpod Orchestrator - LLM
         uses: nick-fields/retry@v3
         with:
