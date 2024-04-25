@@ -68,7 +68,7 @@ jobs:
       - name: Wait for Orchestrator to be ready
         run: |
           gcloud compute ssh l4-cuda121-vision-workers-cd --zone us-central1-a --command "\
-          until curl -f http://localhost:${{ secrets.PORT_ORCH }}/docs; do \
+          until curl -f localhost:${{ secrets.PORT_ORCH }}/docs; do \
             echo 'Waiting for the Orchestrator to be ready...'; \
             sleep 10; \
           done; \
@@ -109,7 +109,7 @@ jobs:
           timeout_minutes: 15
           command: |
             gcloud compute ssh l4-cuda121-vision-workers-cd --zone us-central1-a --command "\
-              curl -f -X POST http://localhost:${{ secrets.PORT_ORCH }}/check-result \
+              curl -f -X POST localhost:${{ secrets.PORT_ORCH }}/check-result \
               -H 'Content-Type: application/json' \
               --data-binary @~/orch-llm.json"
         env:
