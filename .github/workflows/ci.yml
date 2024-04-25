@@ -117,13 +117,16 @@ jobs:
           retry_on: timeout
           timeout_minutes: 15
           command: |
+            JSON_B64=$(echo '${{ secrets.TEST_ORCH_LLM_QUERY }}' | base64)
             gcloud compute ssh l4-cuda121-vision-workers-cd --zone us-central1-a --command "\
-              curl -f -X POST localhost:${{ secrets.PORT_ORCH }}/check-result \
+              echo \$JSON_B64 | base64 --decode > /tmp/query.json; \
+              curl -f -X POST http://localhost:${{ secrets.PORT_ORCH }}/check-result \
               -H 'Content-Type: application/json' \
-              -d '\${{ secrets.TEST_ORCH_LLM_QUERY }}'"
+              -d @/tmp/query.json"
         env:
           TEST_ORCH_LLM_QUERY: ${{ secrets.TEST_ORCH_LLM_QUERY }}
           PORT_ORCH: ${{ secrets.PORT_ORCH }}
+
     
   test-gcp-orchestrator-image:
     needs: test-gcp-orchestrator-llm
