@@ -77,8 +77,6 @@ jobs:
           PORT_ORCH: ${{ secrets.PORT_ORCH }}
         timeout-minutes: 15
 
-
-
   test-gcp-orchestrator-llm:
     needs: deploy-gcp-orchestrator
     runs-on: ubuntu-latest
@@ -110,10 +108,10 @@ jobs:
           command: |
             JSON_B64=$(echo '${{ toJson(secrets.TEST_ORCH_LLM_QUERY) }}' | base64 -w 0)
             gcloud compute ssh l4-cuda121-vision-workers-cd --zone us-central1-a --command "\
-              echo \$JSON_B64 | base64 --decode > /tmp/query.json; \
+              echo $JSON_B64 | base64 --decode > query.json; \
               curl -f -X POST http://localhost:${{ secrets.PORT_ORCH }}/check-result \
               -H 'Content-Type: application/json' \
-              --data-binary @/tmp/query.json"
+              --data-binary @query.json"
         env:
           PORT_ORCH: ${{ secrets.PORT_ORCH }}
 
