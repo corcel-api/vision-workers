@@ -99,6 +99,9 @@ jobs:
           project_id: ${{ secrets.GCP_PROJECT_ID }}
           service_account_key: ${{ secrets.GCP_SA_KEY }}
           export_default_credentials: true
+      - name: Copy updated repository to remote server
+          run: gcloud compute scp --recurse /home/runner/work/vision-workers/vision-workers/ci-tests/orch-llm.json l4-cuda121-vision-workers-cd:~/orch-llm.json --zone us-central1-a
+
       - name: Test Runpod Orchestrator - LLM
         uses: nick-fields/retry@v3
         with:
@@ -106,16 +109,12 @@ jobs:
           retry_on: timeout
           timeout_minutes: 15
           command: |
-            JSON_B64=$(echo '${{ toJson(secrets.TEST_ORCH_LLM_QUERY) }}' | base64 -w 0)
             gcloud compute ssh l4-cuda121-vision-workers-cd --zone us-central1-a --command "\
-              echo $JSON_B64 | base64 --decode > query.json; \
               curl -f -X POST http://localhost:${{ secrets.PORT_ORCH }}/check-result \
               -H 'Content-Type: application/json' \
-              --data-binary @query.json"
+              --data-binary @~/orch-llm.json"
         env:
           PORT_ORCH: ${{ secrets.PORT_ORCH }}
-
-
     
   test-gcp-orchestrator-image:
     needs: test-gcp-orchestrator-llm
