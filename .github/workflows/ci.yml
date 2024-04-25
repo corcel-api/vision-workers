@@ -67,24 +67,10 @@ jobs:
 
       - name: Wait for Orchestrator to be ready
         run: |
-          gcloud compute ssh l4-cuda121-vision-workers-cd --zone us-central1-a --command "\
-            echo 'Checking service on port $PORT_ORCH'; \
-            timeout=1000; # Timeout in seconds \
-            interval=10; # Interval in seconds \
-            attempts=\$((timeout / interval)); \
-            count=0; \
-            until curl -f http://localhost:$PORT_ORCH/docs; \
-            do \
-              echo 'Waiting for Orchestrator to be ready...'; \
-              sleep $interval; \
-              ((count++)); \
-              if [[ \"\$count\" -eq \"\$attempts\" ]]; then \
-                echo 'Timeout reached, exiting...'; \
-                exit 1; \
-              fi; \
-            done"
+          gcloud compute ssh l4-cuda121-vision-workers-cd --zone us-central1-a --command "until curl -f http://localhost:$PORT_ORCH/docs"
         env:
           PORT_ORCH: ${{ secrets.PORT_ORCH }}
+        timeout-minutes: 10
 
 
 
@@ -117,15 +103,15 @@ jobs:
           retry_on: timeout
           timeout_minutes: 15
           command: |
-            JSON_B64=$(echo '${{ secrets.TEST_ORCH_LLM_QUERY }}' | base64)
+            JSON_B64=$(echo '${{ toJson(secrets.TEST_ORCH_LLM_QUERY) }}' | base64 -w 0)
             gcloud compute ssh l4-cuda121-vision-workers-cd --zone us-central1-a --command "\
-              echo $JSON_B64 | base64 --decode > /tmp/query.json; \
+              echo \$JSON_B64 | base64 --decode > /tmp/query.json; \
               curl -f -X POST http://localhost:${{ secrets.PORT_ORCH }}/check-result \
               -H 'Content-Type: application/json' \
-              -d @/tmp/query.json"
+              --data-binary @/tmp/query.json"
         env:
-          TEST_ORCH_LLM_QUERY: ${{ secrets.TEST_ORCH_LLM_QUERY }}
           PORT_ORCH: ${{ secrets.PORT_ORCH }}
+
 
     
   test-gcp-orchestrator-image:
