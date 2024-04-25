@@ -66,24 +66,26 @@ jobs:
           PORT_LLM: ${{ secrets.PORT_LLM }}  
 
       - name: Wait for Orchestrator to be ready
-        run: >
-          gcloud compute ssh l4-cuda121-vision-workers-cd --zone us-central1-a --command "echo 'Checking service on port \$PORT_ORCH';
-          timeout=1000; # Timeout in seconds
-          interval=10; # Interval in seconds
-          attempts=\$((timeout / interval));
-          count=0;
-          until curl -f http://localhost:\$PORT_ORCH/docs;
-          do
-            echo 'Waiting for Orchestrator to be ready...';
-            sleep \$interval;
-            ((count++));
-            if [[ \"\$count\" -eq \"\$attempts\" ]]; then
-              echo 'Timeout reached, exiting...';
-              exit 1;
-            fi;
-          done"
+        run: |
+          gcloud compute ssh l4-cuda121-vision-workers-cd --zone us-central1-a --command "\
+            echo 'Checking service on port $PORT_ORCH'; \
+            timeout=1000; # Timeout in seconds \
+            interval=10; # Interval in seconds \
+            attempts=\$((timeout / interval)); \
+            count=0; \
+            until curl -f http://localhost:$PORT_ORCH/docs; \
+            do \
+              echo 'Waiting for Orchestrator to be ready...'; \
+              sleep $interval; \
+              ((count++)); \
+              if [[ \"\$count\" -eq \"\$attempts\" ]]; then \
+                echo 'Timeout reached, exiting...'; \
+                exit 1; \
+              fi; \
+            done"
         env:
           PORT_ORCH: ${{ secrets.PORT_ORCH }}
+
 
 
   test-gcp-orchestrator-llm:
