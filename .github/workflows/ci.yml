@@ -66,11 +66,7 @@ jobs:
           PORT_LLM: ${{ secrets.PORT_LLM }}  
 
       - name: Wait for Orchestrator to be ready
-        run: |
-          until curl -f http://localhost:${{ secrets.PORT_ORCH }}/docs; do
-            echo 'Waiting for Orchestrator to be ready...'
-            sleep 5
-          done
+        run: gcloud compute ssh l4-cuda121-vision-workers-cd --zone us-central1-a --command "until curl -f http://localhost:${{ secrets.PORT_ORCH }}/docs; do echo 'Waiting for Orchestrator to be ready...'; sleep 5; done"            
         env:
           PORT_ORCH: ${{ secrets.PORT_ORCH }}  
 
