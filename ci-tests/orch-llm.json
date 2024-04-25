@@ -9,7 +9,7 @@
         "temperature": 0.8,
         "max_tokens": 20,
         "seed": 3831303107,
-        "model": "mixtral-8x7b",
+        "model": "bittensor-finetune",
         "name": "Chat",
         "timeout": 12.0,
         "total_size": 0,
@@ -130,5 +130,5 @@
         "error_message": null,
         "failed_axon_uids": []
     },
-    "task": "chat-mixtral"
+    "task": "chat-bittensor-finetune"
 }
