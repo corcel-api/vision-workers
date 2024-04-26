@@ -37,5 +37,5 @@ else
     sleep 1
 fi
 
-uvicorn main:app --host 0.0.0.0 --port $port
+uvicorn main:app --host 0.0.0.0 --port $port --workers 1
 cleanup
