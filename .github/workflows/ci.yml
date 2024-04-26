@@ -77,7 +77,7 @@ jobs:
           PORT_ORCH: ${{ secrets.PORT_ORCH }}
         timeout-minutes: 15
 
-  test-gcp-orchestrator-llm:
+  test-gcp-orchestrator-image:
     needs: deploy-gcp-orchestrator
     runs-on: ubuntu-latest
     steps:
@@ -100,46 +100,8 @@ jobs:
           service_account_key: ${{ secrets.GCP_SA_KEY }}
           export_default_credentials: true
       - name: Copy json data for query
-        run: gcloud compute scp --recurse /home/runner/work/vision-workers/vision-workers/ci-tests/orch-llm.json l4-cuda121-vision-workers-cd:/home/runner/orch-llm.json --zone us-central1-a
-      - name: Test Runpod Orchestrator - LLM
-        uses: nick-fields/retry@v3
-        with:
-          max_attempts: 3
-          retry_on: timeout
-          timeout_minutes: 15
-          command: |
-            gcloud compute ssh l4-cuda121-vision-workers-cd --zone us-central1-a --command "\
-              curl -f -X POST localhost:${{ secrets.PORT_ORCH }}/check-result \
-              -H 'Content-Type: application/json' \
-              --data-binary @/home/runner/orch-llm.json"
-        env:
-          PORT_ORCH: ${{ secrets.PORT_ORCH }}
-    
-  test-gcp-orchestrator-image:
-    needs: test-gcp-orchestrator-llm
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-      - name: Decode SSH keys
-        run: |
-          mkdir /home/runner/.ssh
-          echo "$SSH_PRIVATE_KEY" | base64 --decode > /home/runner/.ssh/google_compute_engine
-          echo "$SSH_PUBLIC_KEY" | base64 --decode > /home/runner/.ssh/google_compute_engine.pub
-          chmod 600 ~/.ssh/google_compute_engine
-          chmod 644 ~/.ssh/google_compute_engine.pub
-        env:
-          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
-          SSH_PUBLIC_KEY: ${{ secrets.SSH_PUBLIC_KEY }}
-      - name: Set up Cloud SDK
-        uses: google-github-actions/setup-gcloud@v0.3.0
-        with:
-          project_id: ${{ secrets.GCP_PROJECT_ID }}
-          service_account_key: ${{ secrets.GCP_SA_KEY }}
-          export_default_credentials: true
-      - name: Copy updated repository to remote server
         run: gcloud compute scp --recurse /home/runner/work/vision-workers/vision-workers/ci-tests/orch-image-txt2img.json l4-cuda121-vision-workers-cd:/home/runner/orch-image-txt2img.json --zone us-central1-a
-      - name: Test Runpod Orchestrator - Image
+      - name: Test Runpod Orchestrator - LLM
         uses: nick-fields/retry@v3
         with:
           max_attempts: 3
@@ -152,7 +114,7 @@ jobs:
               --data-binary @/home/runner/orch-image-txt2img.json"
         env:
           PORT_ORCH: ${{ secrets.PORT_ORCH }}
-
+    
   test-gcp-orchestrator-avatar:
       needs: test-gcp-orchestrator-image
       runs-on: ubuntu-latest
@@ -187,6 +149,6 @@ jobs:
               gcloud compute ssh l4-cuda121-vision-workers-cd --zone us-central1-a --command "\
                 curl -f -X POST localhost:${{ secrets.PORT_LLM }}/avatar \
                 -H 'Content-Type: application/json' \
-                --data-binary @orch-image-txt2img.json"
+                --data-binary @/home/runner/orch-image-txt2img.json"
           env:
             PORT_LLM: ${{ secrets.PORT_LLM }}
