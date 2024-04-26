@@ -157,7 +157,6 @@ class PayloadModifier:
         init_img = base64_to_image(input_data.init_image)
         img_id = _save_image_and_return_uuid(init_img)
         payload["Image_loader"]["inputs"]["image"] = f"{img_id}.png"
-        traceback.print_exc()
         return payload, [img_id]
 
     def modify_avatar(self, input_data: AvatarBase) -> Dict[str, Any]:
