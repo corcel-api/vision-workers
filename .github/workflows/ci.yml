@@ -77,7 +77,7 @@ jobs:
           done
           echo 'Instance is ready!'
 
-      - name: Clear remote directory
+      - name: Start orchestrator server
         run: gcloud compute ssh l4-cuda121-vision-workers-cd --zone us-central1-a --command "docker run -d --gpus all --runtime=nvidia -p ${{ secrets.PORT_ORCH }}:${{ secrets.PORT_ORCH }} -p ${{ secrets.PORT_LLM }}:${{ secrets.PORT_LLM }} corcelio/cicd:orchestrator-${{ github.run_id }}"
         env:
           PORT_ORCH: ${{ secrets.PORT_ORCH }}  
@@ -213,4 +213,58 @@ jobs:
           timeout_minutes: 15
           command: |
             gcloud compute instances stop l4-cuda121-vision-workers-cd --zone us-central1-a
+
+
+  deploy-gcp-llm-no-model:
+    needs: build-all
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Decode SSH keys
+        run: |
+          mkdir /home/runner/.ssh
+          echo "$SSH_PRIVATE_KEY" | base64 --decode > /home/runner/.ssh/google_compute_engine
+          echo "$SSH_PUBLIC_KEY" | base64 --decode > /home/runner/.ssh/google_compute_engine.pub
+          chmod 600 ~/.ssh/google_compute_engine
+          chmod 644 ~/.ssh/google_compute_engine.pub
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          SSH_PUBLIC_KEY: ${{ secrets.SSH_PUBLIC_KEY }}
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v0.3.0
+        with:
+          project_id: ${{ secrets.GCP_PROJECT_ID }}
+          service_account_key: ${{ secrets.GCP_SA_KEY }}
+          export_default_credentials: true
+
+      - name: Start GCP Instance
+        run: gcloud compute instances start l4-cuda121-vision-workers-cd-2 --zone us-central1-a
+
+      - name: Wait for Instance to be Ready
+        run: |
+          until gcloud compute ssh l4-cuda121-vision-workers-cd-2 --zone us-central1-a --command "echo 'Instance is up'"; do
+            echo 'Waiting for the instance to be ready...'
+            sleep 10
+          done
+          echo 'Instance is ready!'
+
+      - name: Start LLM server
+        run: gcloud compute ssh l4-cuda121-vision-workers-cd-2 --zone us-central1-a --command "docker run -d --gpus all --runtime=nvidia -p ${{ secrets.PORT_LLM }}:${{ secrets.PORT_LLM }} corcelio/cicd:llm-server-${{ github.run_id }}"
+        env:
+          PORT_LLM: ${{ secrets.PORT_LLM }}  
+
+      - name: Wait for LLM server to be ready
+        run: |
+          gcloud compute ssh l4-cuda121-vision-workers-cd-2 --zone us-central1-a --command "\
+          until curl -f localhost:${{ secrets.PORT_LLM }}/docs; do \
+            echo 'Waiting for the Orchestrator to be ready...'; \
+            sleep 10; \
+          done; \
+          echo 'Orchestrator is ready!'"
+        env:
+          PORT_LLM: ${{ secrets.PORT_LLM }}
+        timeout-minutes: 15
 
