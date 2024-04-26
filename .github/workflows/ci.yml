@@ -45,7 +45,7 @@ jobs:
           DOCKER_USER: ${{ secrets.DOCKER_USER }}
           DOCKER_PASSW: ${{ secrets.DOCKER_PASSW }}
   
-  deploy-gcp-orchestrator:
+  gcp-deploy-orchestrator:
     needs: build-all
     runs-on: ubuntu-latest
     steps:
@@ -99,8 +99,8 @@ jobs:
           PORT_ORCH: ${{ secrets.PORT_ORCH }}
         timeout-minutes: 15
 
-  test-gcp-orchestrator-image:
-    needs: deploy-gcp-orchestrator
+  gcp-test-orchestrator-image:
+    needs: gcp-deploy-orchestrator
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -141,8 +141,8 @@ jobs:
         env:
           PORT_ORCH: ${{ secrets.PORT_ORCH }}
     
-  test-gcp-orchestrator-avatar:
-    needs: test-gcp-orchestrator-image
+  gc-test-orchestrator-avatar:
+    needs: gcp-test-orchestrator-image
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -183,8 +183,8 @@ jobs:
         env:
           PORT_LLM: ${{ secrets.PORT_LLM }}
   
-  stop-gcp-test-orch:
-    needs: test-gcp-orchestrator-avatar
+  gcp-stop-test-orch:
+    needs: gc-test-orchestrator-avatar
     runs-on: ubuntu-latest
     steps:
       - name: Decode SSH keys
@@ -219,7 +219,7 @@ jobs:
             gcloud compute instances stop l4-cuda121-vision-workers-cd --zone us-central1-a
 
 
-  deploy-gcp-llm-no-model:
+  gcp-deploy-llm-no-model:
     needs: build-all
     runs-on: ubuntu-latest
     steps:
@@ -286,7 +286,7 @@ jobs:
             gcloud compute instances stop l4-cuda121-vision-workers-cd-2 --zone us-central1-a
 
 
-  deploy-gcp-image:
+  gcp-deploy-image:
     needs: build-all
     runs-on: ubuntu-latest
     steps:
@@ -360,7 +360,7 @@ jobs:
 
 
 
-  deploy-runpod-orchestrator:
+  runpod-deploy-orchestrator:
     if: github.event_name == 'workflow_dispatch'
     needs: build-all
     runs-on: ubuntu-latest
@@ -392,8 +392,8 @@ jobs:
           echo "::set-output name=instance_id::$instance_id"
         timeout-minutes: 30
 
-  test-runpod-orch-llm:
-    needs: deploy-runpod-orchestrator
+  runpod-test-orch-llm:
+    needs: runpod-deploy-orchestrator
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Repository
@@ -406,14 +406,14 @@ jobs:
           retry_on: timeout
           timeout_minutes: 15
           command: |
-            curl -f -X POST https://${{ needs.deploy-runpod-orchestrator.outputs.instance_id }}-${{ secrets.PORT_ORCH }}.proxy.runpod.net/check-result \
+            curl -f -X POST https://${{ needs.runpod-deploy-orchestrator.outputs.instance_id }}-${{ secrets.PORT_ORCH }}.proxy.runpod.net/check-result \
                   -H "Content-Type: application/json" \
                   -d '${{ secrets.TEST_ORCH_LLM_QUERY }}'
     outputs:
-      instance_id: ${{ needs.deploy-runpod-orchestrator.outputs.instance_id }}
+      instance_id: ${{ needs.runpod-deploy-orchestrator.outputs.instance_id }}
   
-  test-runpod-orch-image:
-    needs: test-runpod-orch-llm
+  runpod-test-orch-image:
+    needs: runpod-test-orch-llm
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Repository
@@ -426,14 +426,14 @@ jobs:
           retry_on: timeout
           timeout_minutes: 15
           command: |
-            curl -f -X POST https://${{ needs.test-runpod-orch-llm.outputs.instance_id }}-${{ secrets.PORT_ORCH }}.proxy.runpod.net/check-result \
+            curl -f -X POST https://${{ needs.runpod-test-orch-llm.outputs.instance_id }}-${{ secrets.PORT_ORCH }}.proxy.runpod.net/check-result \
                   -H "Content-Type: application/json" \
                   --data-binary @ci-tests/orch-image-txt2img.json
     outputs:
-      instance_id: ${{ needs.test-runpod-orch-llm.outputs.instance_id }}
+      instance_id: ${{ needs.runpod-test-orch-llm.outputs.instance_id }}
 
-  test-runpod-orch-avatar:
-    needs: test-runpod-orch-image
+  runpod-test-orch-avatar:
+    needs: runpod-test-orch-image
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Repository
@@ -446,23 +446,23 @@ jobs:
           retry_on: timeout
           timeout_minutes: 15
           command: |
-            curl -f -X POST https://${{ needs.test-runpod-orch-image.outputs.instance_id }}-${{ secrets.PORT_LLM }}.proxy.runpod.net/avatar \
+            curl -f -X POST https://${{ needs.runpod-test-orch-image.outputs.instance_id }}-${{ secrets.PORT_LLM }}.proxy.runpod.net/avatar \
                   -H "Content-Type: application/json" \
                   --data-binary @ci-tests/avatar-test.json
     outputs:
-      instance_id: ${{ needs.test-runpod-orch-image.outputs.instance_id }}
+      instance_id: ${{ needs.runpod-test-orch-image.outputs.instance_id }}
 
-  destroy-runpod-orch:
-    needs: test-runpod-orch-avatar
+  runpod-destroy-orch:
+    needs: runpod-test-orch-avatar
     runs-on: ubuntu-latest
     steps:
       - name: Destroy Orchestrator runpod instance
         run: |
-          curl -f -X DELETE https://runpod-manager.onrender.com/delete-instance/${{ needs.test-runpod-orch-avatar.outputs.instance_id }} \
+          curl -f -X DELETE https://runpod-manager.onrender.com/delete-instance/${{ needs.runpod-test-orch-avatar.outputs.instance_id }} \
                -H "API_KEY: ${{ secrets.RUNPOD_MANAGER_API_KEY }}"
         timeout-minutes: 1
 
-  deploy-runpod-llm-server:
+  runpod-deploy-llm-server:
     if: github.event_name == 'workflow_dispatch'
     needs: build-all
     runs-on: ubuntu-latest
@@ -494,8 +494,8 @@ jobs:
           echo "::set-output name=instance_id::$instance_id"
         timeout-minutes: 30
 
-  test-runpod-llm:
-    needs: deploy-runpod-llm-server
+  runpod-test-llm:
+    needs: runpod-deploy-llm-server
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Repository
@@ -508,27 +508,27 @@ jobs:
           retry_on: timeout
           timeout_minutes: 15
           command: |
-            curl -f -X POST https://${{ needs.deploy-runpod-llm-server.outputs.instance_id }}-${{ secrets.PORT_LLM }}.proxy.runpod.net/load_model \
+            curl -f -X POST https://${{ needs.runpod-deploy-llm-server.outputs.instance_id }}-${{ secrets.PORT_LLM }}.proxy.runpod.net/load_model \
                   -H "Content-Type: application/json" \
                   -d '${{ secrets.TEST_LLM_LOAD_QUERY }}'
-            curl -f -X POST https://${{ needs.deploy-runpod-llm-server.outputs.instance_id }}-${{ secrets.PORT_LLM }}.proxy.runpod.net/generate_text \
+            curl -f -X POST https://${{ needs.runpod-deploy-llm-server.outputs.instance_id }}-${{ secrets.PORT_LLM }}.proxy.runpod.net/generate_text \
                   -H "Content-Type: application/json" \
                   -d '${{ secrets.TEST_LLM_CHAT_QUERY }}'
 
     outputs:
-      instance_id: ${{ needs.deploy-runpod-llm-server.outputs.instance_id }}
+      instance_id: ${{ needs.runpod-deploy-llm-server.outputs.instance_id }}
 
-  destroy-runpod-llm:
-    needs: test-runpod-llm
+  runpod-destroy-llm:
+    needs: runpod-test-llm
     runs-on: ubuntu-latest
     steps:
       - name: Destroy Orchestrator runpod instance
         run: |
-          curl -f -X DELETE https://runpod-manager.onrender.com/delete-instance/${{ needs.test-runpod-llm.outputs.instance_id }} \
+          curl -f -X DELETE https://runpod-manager.onrender.com/delete-instance/${{ needs.runpod-test-llm.outputs.instance_id }} \
                -H "API_KEY: ${{ secrets.RUNPOD_MANAGER_API_KEY }}"
         timeout-minutes: 1
 
-  deploy-runpod-image-server:
+  runpod-deploy-image-server:
     if: github.event_name == 'workflow_dispatch'
     needs: build-all
     runs-on: ubuntu-latest
@@ -560,8 +560,8 @@ jobs:
           echo "::set-output name=instance_id::$instance_id"
         timeout-minutes: 30
   
-  test-runpod-image:
-    needs: deploy-runpod-image-server
+  runpod-test-image:
+    needs: runpod-deploy-image-server
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Repository
@@ -574,20 +574,20 @@ jobs:
           retry_on: timeout
           timeout_minutes: 15
           command: |
-            curl -f -X POST https://${{ needs.deploy-runpod-image-server.outputs.instance_id }}-${{ secrets.PORT_LLM }}.proxy.runpod.net/txt2img \
+            curl -f -X POST https://${{ needs.runpod-deploy-image-server.outputs.instance_id }}-${{ secrets.PORT_LLM }}.proxy.runpod.net/txt2img \
                 -H "Content-Type: application/json" \
                 --data-binary @ci-tests/image-server-test.json
 
     outputs:
-      instance_id: ${{ needs.deploy-runpod-image-server.outputs.instance_id }}
+      instance_id: ${{ needs.runpod-deploy-image-server.outputs.instance_id }}
 
-  destroy-runpod-image:
-    needs: test-runpod-image
+  runpod-destroy-image:
+    needs: runpod-test-image
     runs-on: ubuntu-latest
     steps:
       - name: Destroy Image runpod instance
         run: |
-          curl -f -X DELETE https://runpod-manager.onrender.com/delete-instance/${{ needs.test-runpod-image.outputs.instance_id }} \
+          curl -f -X DELETE https://runpod-manager.onrender.com/delete-instance/${{ needs.runpod-test-image.outputs.instance_id }} \
                -H "API_KEY: ${{ secrets.RUNPOD_MANAGER_API_KEY }}"
         timeout-minutes: 1
 
