@@ -203,8 +203,8 @@ jobs:
 
       - name: Stop docker containers
         run: |
-          gcloud compute ssh l4-cuda121-vision-workers-cd --zone us-central1-a --command "docker stop $(docker ps -q)"
-          
+          gcloud compute ssh l4-cuda121-vision-workers-cd --zone us-central1-a --command "docker stop $$(docker ps -q)"
+
       - name: Stop Compute Engine
         uses: nick-fields/retry@v3
         with:
