@@ -21,17 +21,6 @@
         "title": "Shared Checkpoint Loader (Inspire)"
       }
     },
-    "82": {
-      "inputs": {
-        "ckpt_name": "juggerinpaint.safetensors",
-        "key_opt": "",
-        "mode": "Auto"
-      },
-      "class_type": "CheckpointLoaderSimpleShared //Inspire",
-      "_meta": {
-        "title": "Shared Checkpoint Loader (Inspire)"
-      }
-    },
     "83": {
       "inputs": {
         "ckpt_name": "dreamshaperturbo.safetensors",
@@ -83,36 +72,6 @@
         "denoise": 1,
         "model": [
           "81",
-          0
-        ],
-        "positive": [
-          "95",
-          0
-        ],
-        "negative": [
-          "96",
-          0
-        ],
-        "latent_image": [
-          "101",
-          0
-        ]
-      },
-      "class_type": "KSampler",
-      "_meta": {
-        "title": "KSampler"
-      }
-    },
-    "93": {
-      "inputs": {
-        "seed": 314869996745065,
-        "steps": 1,
-        "cfg": 8,
-        "sampler_name": "euler",
-        "scheduler": "normal",
-        "denoise": 1,
-        "model": [
-          "82",
           0
         ],
         "positive": [
@@ -232,22 +191,6 @@
         "title": "VAE Decode"
       }
     },
-    "105": {
-      "inputs": {
-        "samples": [
-          "93",
-          0
-        ],
-        "vae": [
-          "75",
-          2
-        ]
-      },
-      "class_type": "VAEDecode",
-      "_meta": {
-        "title": "VAE Decode"
-      }
-    },
     "106": {
       "inputs": {
         "samples": [
@@ -268,18 +211,6 @@
       "inputs": {
         "images": [
           "106",
-          0
-        ]
-      },
-      "class_type": "PreviewImage",
-      "_meta": {
-        "title": "Preview Image"
-      }
-    },
-    "108": {
-      "inputs": {
-        "images": [
-          "105",
           0
         ]
       },

@@ -174,6 +174,7 @@ class PayloadModifier:
         payload["Negative_prompt"]["inputs"]["text"] += negative_prompt
 
         payload["Sampler"]["inputs"]["steps"] = input_data.steps
+        payload["Sampler_initial"]["inputs"]["steps"] = input_data.steps - 5
         seed = input_data.seed
         if seed == 0:
             seed = random.randint(1, 2**16)
