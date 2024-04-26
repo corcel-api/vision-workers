@@ -22,9 +22,8 @@ fi
 
 [ -f ComfyUI/models/upscale_models/swift_srgan_2x.pth ] || wget -O ComfyUI/models/upscale_models/swift_srgan_2x.pth https://github.com/Koushik0901/Swift-SRGAN/releases/download/v0.1/swift_srgan_2x.pth.tar
 
-[ -f ComfyUI/input/init.png ] || mv ComfyUI/input/example.png ComfyUI/input/init.png
+[ -f ComfyUI/input/init.png ] || cp assets/face_image.png ComfyUI/input/init.png
 
-[ -f ComfyUI/input/mask.png ] || cp ComfyUI/input/init.png ComfyUI/input/mask.png
 
 cd ComfyUI/custom_nodes
 

@@ -15,7 +15,7 @@ from PIL import Image
 import copy
 import random
 import uuid
-import traceback
+import os
 
 
 
@@ -40,6 +40,12 @@ def _save_image_and_return_uuid(
     image_id = uuid.uuid4()
     pil_image.save(f"{cst.COMFY_INPUT_PATH}{image_id}.png")
     return image_id
+
+def _highvram_mode() -> bool:
+    high_modes = ["--highvram", "--gpu-only"]
+    if os.getenv("VRAM_MODE") in high_modes:
+        return True
+    return False
 
 
 class PayloadModifier:
@@ -155,14 +161,16 @@ class PayloadModifier:
         return payload, [img_id]
 
     def modify_avatar(self, input_data: AvatarBase) -> Dict[str, Any]:
-        payload = copy.deepcopy(self._payloads["instantid"])
+        avatar_mode = "instantid_highvram" if _highvram_mode() else "instantid"
+        payload = copy.deepcopy(self._payloads[avatar_mode])
         init_img = base64_to_image(input_data.init_image)
         img_id = _save_image_and_return_uuid(init_img)
 
         positive_prompt, negative_prompt = _extract_positive_and_negative_prompts(
             input_data.text_prompts
         )
-        payload["Prompt"]["inputs"]["text"] += positive_prompt
+        payload["Prompt"]["inputs"]["text"] = positive_prompt
+        payload["Prompt_initial"]["inputs"]["text"] += positive_prompt
         payload["Negative_prompt"]["inputs"]["text"] += negative_prompt
 
         payload["Sampler"]["inputs"]["steps"] = input_data.steps
