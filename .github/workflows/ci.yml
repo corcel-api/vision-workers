@@ -83,7 +83,7 @@ jobs:
           export_default_credentials: true
 
       - name: Start orchestrator server
-        run: gcloud compute ssh a100-cuda118 --zone us-central1-b --command "docker run --gpus all --runtime=nvidia -p ${{ secrets.PORT_ORCH }}:${{ secrets.PORT_ORCH }} -p ${{ secrets.PORT_LLM }}:${{ secrets.PORT_LLM }} corcelio/cicd:orchestrator-${{ github.run_id }}"
+        run: gcloud compute ssh a100-cuda118 --zone us-central1-b --command "docker run -d --gpus all --runtime=nvidia -p ${{ secrets.PORT_ORCH }}:${{ secrets.PORT_ORCH }} -p ${{ secrets.PORT_LLM }}:${{ secrets.PORT_LLM }} corcelio/cicd:orchestrator-${{ github.run_id }}"
         env:
           PORT_ORCH: ${{ secrets.PORT_ORCH }}  
           PORT_LLM: ${{ secrets.PORT_LLM }}  
@@ -415,7 +415,7 @@ jobs:
           export_default_credentials: true
 
       - name: Start Image server
-        run: gcloud compute ssh a100-cuda118 --zone us-central1-b --command "docker run --gpus all --runtime=nvidia -p ${{ secrets.PORT_LLM }}:${{ secrets.PORT_LLM }} corcelio/cicd:image-server-${{ github.run_id }}"
+        run: gcloud compute ssh a100-cuda118 --zone us-central1-b --command "docker run -d --gpus all --runtime=nvidia -p ${{ secrets.PORT_LLM }}:${{ secrets.PORT_LLM }} corcelio/cicd:image-server-${{ github.run_id }}"
         env:
           PORT_LLM: ${{ secrets.PORT_LLM }}  
 
@@ -475,7 +475,7 @@ jobs:
 
 
   runpod-deploy-orchestrator:
-    if: github.event_name == 'workflow_dispatch'
+    if: github.event.inputs.triggerOptionalJobs == 'yes'
     needs: build-all
     runs-on: ubuntu-latest
     outputs:
@@ -577,7 +577,7 @@ jobs:
         timeout-minutes: 1
 
   runpod-deploy-llm-server:
-    if: github.event_name == 'workflow_dispatch'
+    if: github.event.inputs.triggerOptionalJobs == 'yes'
     needs: build-all
     runs-on: ubuntu-latest
     outputs:
@@ -643,7 +643,7 @@ jobs:
         timeout-minutes: 1
 
   runpod-deploy-image-server:
-    if: github.event_name == 'workflow_dispatch'
+    if: github.event.inputs.triggerOptionalJobs == 'yes'
     needs: build-all
     runs-on: ubuntu-latest
     outputs:
