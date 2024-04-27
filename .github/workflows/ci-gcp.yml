@@ -108,7 +108,7 @@ jobs:
       - name: Wait for Orchestrator to be ready
         run: |
           gcloud compute ssh a100-cuda118 --zone us-central1-b --command "\
-          until curl --connect-timeout 0 --max-time 0 -f localhost:${{ secrets.PORT_ORCH }}/docs; do \
+          until curl --connect-timeout 0 --max-time 0 localhost:${{ secrets.PORT_ORCH }}/docs; do \
             echo 'Waiting for the Orchestrator to be ready...'; \
             sleep 10; \
           done; \
@@ -153,7 +153,7 @@ jobs:
           timeout_minutes: 15
           command: |
             gcloud compute ssh a100-cuda118 --zone us-central1-b --command "\
-              curl --connect-timeout 0 --max-time 0 -f -X POST localhost:${{ secrets.PORT_ORCH }}/check-result \
+              curl --connect-timeout 0 --max-time 0 -X POST localhost:${{ secrets.PORT_ORCH }}/check-result \
               -H 'Content-Type: application/json' \
               --data-binary @/home/runner/orch-image-txt2img.json"
         env:
@@ -195,7 +195,7 @@ jobs:
           timeout_minutes: 15
           command: |
             gcloud compute ssh a100-cuda118 --zone us-central1-b --command "\
-              curl --connect-timeout 0 --max-time 0 -f -v -X POST localhost:${{ secrets.PORT_LLM }}/avatar \
+              curl --connect-timeout 0 --max-time 0 -v -X POST localhost:${{ secrets.PORT_LLM }}/avatar \
               -H 'Content-Type: application/json' \
               --data-binary @/home/runner/avatar-test.json"
         env:
@@ -260,7 +260,7 @@ jobs:
       - name: Wait for LLM server to be ready
         run: |
           gcloud compute ssh a100-cuda118 --zone us-central1-b --command "\
-          until curl --connect-timeout 0 --max-time 0 -f -v localhost:${{ secrets.PORT_LLM }}/docs; do \
+          until curl --connect-timeout 0 --max-time 0 -v localhost:${{ secrets.PORT_LLM }}/docs; do \
             echo 'Waiting for the LLM server to be ready...'; \
             sleep 10; \
           done; \
@@ -305,7 +305,7 @@ jobs:
           timeout_minutes: 15
           command: |
             gcloud compute ssh a100-cuda118 --zone us-central1-b --command "\
-              curl --connect-timeout 0 --max-time 0 -f -v -X POST localhost:${{ secrets.PORT_LLM }}/load_model \
+              curl --connect-timeout 0 --max-time 0 -v -X POST localhost:${{ secrets.PORT_LLM }}/load_model \
               -H 'Content-Type: application/json' \
               --data-binary @/home/runner/load_model_small.json"
         env:
@@ -322,7 +322,7 @@ jobs:
           timeout_minutes: 15
           command: |
             gcloud compute ssh a100-cuda118 --zone us-central1-b --command "\
-              curl --connect-timeout 0 --max-time 0 -f -v -X POST localhost:${{ secrets.PORT_LLM }}/generate_text \
+              curl --connect-timeout 0 --max-time 0 -v -X POST localhost:${{ secrets.PORT_LLM }}/generate_text \
               -H 'Content-Type: application/json' \
               --data-binary @/home/runner/query_llm.json"
         env:
@@ -387,7 +387,7 @@ jobs:
       - name: Wait for Image server to be ready
         run: |
           gcloud compute ssh a100-cuda118 --zone us-central1-b --command "\
-          until curl --connect-timeout 0 --max-time 0 -f -v localhost:${{ secrets.PORT_LLM }}/docs; do \
+          until curl --connect-timeout 0 --max-time 0 -v localhost:${{ secrets.PORT_LLM }}/docs; do \
             echo 'Waiting for the Image server to be ready...'; \
             sleep 10; \
           done; \
@@ -432,7 +432,7 @@ jobs:
           timeout_minutes: 15
           command: |
             gcloud compute ssh a100-cuda118 --zone us-central1-b --command "\
-              curl --connect-timeout 0 --max-time 0 -f -v -X POST localhost:${{ secrets.PORT_LLM }}/txt2img \
+              curl --connect-timeout 0 --max-time 0 -v -X POST localhost:${{ secrets.PORT_LLM }}/txt2img \
               -H 'Content-Type: application/json' \
               --data-binary @/home/runner/image-server-test.json"
         env:
@@ -474,7 +474,7 @@ jobs:
           timeout_minutes: 15
           command: |
             gcloud compute ssh a100-cuda118 --zone us-central1-b --command "\
-              curl --connect-timeout 0 --max-time 0 -f -v -X POST localhost:${{ secrets.PORT_LLM }}/avatar \
+              curl --connect-timeout 0 --max-time 0 -v -X POST localhost:${{ secrets.PORT_LLM }}/avatar \
               -H 'Content-Type: application/json' \
               --data-binary @/home/runner/avatar-test.json"
         env:
@@ -516,7 +516,7 @@ jobs:
       - name: Deploy to Runpod
         id: deploy-orch
         run: |
-          response=$(curl --connect-timeout 0 --max-time 0 -f -X POST https://runpod-manager.onrender.com/create-instance \
+          response=$(curl --connect-timeout 0 --max-time 0 --retry 5 -X POST https://runpod-manager.onrender.com/create-instance \
                           -H "Content-Type: application/json" \
                           -H "API_KEY: ${{ secrets.RUNPOD_MANAGER_API_KEY }}" \
                           -d '{
@@ -552,7 +552,7 @@ jobs:
           retry_on: timeout
           timeout_minutes: 15
           command: |
-            curl --connect-timeout 0 --max-time 0 -f -v -X POST https://${{ needs.runpod-deploy-orchestrator.outputs.instance_id }}-${{ secrets.PORT_ORCH }}.proxy.runpod.net/check-result \
+            curl --connect-timeout 0 --max-time 0 -v -X POST https://${{ needs.runpod-deploy-orchestrator.outputs.instance_id }}-${{ secrets.PORT_ORCH }}.proxy.runpod.net/check-result \
                   -H "Content-Type: application/json" \
                   --data-binary @/home/runner/work/vision-workers/vision-workers/ci-tests/orch_llm.json
     outputs:
@@ -572,7 +572,7 @@ jobs:
           retry_on: timeout
           timeout_minutes: 15
           command: |
-            curl --connect-timeout 0 --max-time 0 -f -v -X POST https://${{ needs.runpod-test-orch-llm.outputs.instance_id }}-${{ secrets.PORT_ORCH }}.proxy.runpod.net/check-result \
+            curl --connect-timeout 0 --max-time 0 -v -X POST https://${{ needs.runpod-test-orch-llm.outputs.instance_id }}-${{ secrets.PORT_ORCH }}.proxy.runpod.net/check-result \
                   -H "Content-Type: application/json" \
                   --data-binary @/home/runner/work/vision-workers/vision-workers/ci-tests/orch-image-txt2img.json
     outputs:
@@ -584,7 +584,7 @@ jobs:
     steps:
       - name: Destroy Orchestrator runpod instance
         run: |
-          curl --connect-timeout 0 --max-time 0 -f -v -X DELETE https://runpod-manager.onrender.com/delete-instance/${{ needs.runpod-test-orch-avatar.outputs.instance_id }} \
+          curl --connect-timeout 0 --max-time 0 -v -X DELETE https://runpod-manager.onrender.com/delete-instance/${{ needs.runpod-test-orch-avatar.outputs.instance_id }} \
                -H "API_KEY: ${{ secrets.RUNPOD_MANAGER_API_KEY }}"
         timeout-minutes: 1
 
@@ -598,7 +598,7 @@ jobs:
       - name: Deploy to Runpod
         id: deploy-orch
         run: |
-          response=$(curl -f -X POST https://runpod-manager.onrender.com/create-instance \
+          response=$(curl --connect-timeout 0 --max-time 0 --retry 5 -X POST https://runpod-manager.onrender.com/create-instance \
                           -H "Content-Type: application/json" \
                           -H "API_KEY: ${{ secrets.RUNPOD_MANAGER_API_KEY }}" \
                           -d '{
@@ -630,7 +630,7 @@ jobs:
       - name: Load model
         timeout-minutes: 20
         run: |
-          curl --connect-timeout 0 --max-time 0 -f -v -X POST https://${{ needs.runpod-deploy-llm-server.outputs.instance_id }}-${{ secrets.PORT_LLM }}.proxy.runpod.net/load_model \
+          curl --connect-timeout 0 --max-time 0 -v -X POST https://${{ needs.runpod-deploy-llm-server.outputs.instance_id }}-${{ secrets.PORT_LLM }}.proxy.runpod.net/load_model \
                   -H "Content-Type: application/json" \
                   --data-binary @/home/runner/work/vision-workers/vision-workers/ci-tests/load_model.json
 
@@ -641,7 +641,7 @@ jobs:
           retry_on: timeout
           timeout_minutes: 1
           command: |
-            curl --connect-timeout 0 --max-time 0 -f -v -X POST https://${{ needs.runpod-deploy-llm-server.outputs.instance_id }}-${{ secrets.PORT_LLM }}.proxy.runpod.net/generate_text \
+            curl --connect-timeout 0 --max-time 0 -v -X POST https://${{ needs.runpod-deploy-llm-server.outputs.instance_id }}-${{ secrets.PORT_LLM }}.proxy.runpod.net/generate_text \
                   -H "Content-Type: application/json" \
                   --data-binary @/home/runner/work/vision-workers/vision-workers/ci-tests/query_llm.json
 
@@ -654,7 +654,7 @@ jobs:
     steps:
       - name: Destroy Orchestrator runpod instance
         run: |
-          curl --connect-timeout 0 --max-time 0 -f -v -X DELETE https://runpod-manager.onrender.com/delete-instance/${{ needs.runpod-test-llm.outputs.instance_id }} \
+          curl --connect-timeout 0 --max-time 0 -v -X DELETE https://runpod-manager.onrender.com/delete-instance/${{ needs.runpod-test-llm.outputs.instance_id }} \
                -H "API_KEY: ${{ secrets.RUNPOD_MANAGER_API_KEY }}"
         timeout-minutes: 1
 
@@ -668,7 +668,7 @@ jobs:
       - name: Deploy to Runpod
         id: deploy-orch
         run: |
-          response=$(curl -f -X POST https://runpod-manager.onrender.com/create-instance \
+          response=$(curl --connect-timeout 0 --max-time 0 --retry 5 -X POST https://runpod-manager.onrender.com/create-instance \
                           -H "Content-Type: application/json" \
                           -H "API_KEY: ${{ secrets.RUNPOD_MANAGER_API_KEY }}" \
                           -d '{
@@ -704,7 +704,7 @@ jobs:
           retry_on: timeout
           timeout_minutes: 15
           command: |
-            curl --connect-timeout 0 --max-time 0 -f -v -X POST https://${{ needs.runpod-deploy-image-server.outputs.instance_id }}-${{ secrets.PORT_LLM }}.proxy.runpod.net/txt2img \
+            curl --connect-timeout 0 --max-time 0 -v -X POST https://${{ needs.runpod-deploy-image-server.outputs.instance_id }}-${{ secrets.PORT_LLM }}.proxy.runpod.net/txt2img \
                 -H "Content-Type: application/json" \
                 --data-binary @/home/runner/work/vision-workers/vision-workers/ci-tests/image-server-test.json
     outputs:
@@ -716,7 +716,7 @@ jobs:
     steps:
       - name: Destroy Image runpod instance
         run: |
-          curl --connect-timeout 0 --max-time 0 -f -v -X DELETE https://runpod-manager.onrender.com/delete-instance/${{ needs.runpod-test-image.outputs.instance_id }} \
+          curl --connect-timeout 0 --max-time 0 -v -X DELETE https://runpod-manager.onrender.com/delete-instance/${{ needs.runpod-test-image.outputs.instance_id }} \
                -H "API_KEY: ${{ secrets.RUNPOD_MANAGER_API_KEY }}"
         timeout-minutes: 1
 
