@@ -271,6 +271,9 @@ jobs:
           service_account_key: ${{ secrets.GCP_SA_KEY }}
           export_default_credentials: true
       
+      - name: Copy json data for query
+        run: gcloud compute scp --recurse /home/runner/work/vision-workers/vision-workers/ci-tests/load_model_small.json a100-cuda118:/home/runner/load_model_small.json --zone us-central1-b
+      
       - name: Test gcp LLM server - load small model
         uses: nick-fields/retry@v3
         with:
@@ -281,13 +284,12 @@ jobs:
             gcloud compute ssh a100-cuda118 --zone us-central1-b --command "\
               curl -f -X POST localhost:${{ secrets.PORT_LLM }}/load_model \
               -H 'Content-Type: application/json' \
-              -d '{
-                    "model": "NousResearch/Hermes-2-Pro-Mistral-7B",
-                    "tokenizer": "NousResearch/Hermes-2-Pro-Mistral-7B",
-                    "half_precision": true
-                  }'"
+              --data-binary @/home/runner/load_model_small.json"
         env:
           PORT_LLM: ${{ secrets.PORT_LLM }}
+      
+      - name: Copy json data for query
+        run: gcloud compute scp --recurse /home/runner/work/vision-workers/vision-workers/ci-tests/query_llm.json a100-cuda118:/home/runner/query_llm.json --zone us-central1-b
 
       - name: Test gcp LLM server - query model
         uses: nick-fields/retry@v3
@@ -299,19 +301,7 @@ jobs:
             gcloud compute ssh a100-cuda118 --zone us-central1-b --command "\
               curl -f -X POST localhost:${{ secrets.PORT_LLM }}/generate_text \
               -H 'Content-Type: application/json' \
-              -d '{
-                    "messages": [
-                      {
-                        "role": "user",
-                        "content": "Remind me that I have forgot to set the messages"
-                      }
-                    ],
-                    "seed": 0,
-                    "temperature": 0.5,
-                    "max_tokens": 4096,
-                    "number_of_logprobs": 1,
-                    "starting_assistant_message": true
-                  }'"
+              --data-binary @/home/runner/query_llm.json"
         env:
           PORT_LLM: ${{ secrets.PORT_LLM }}
       
