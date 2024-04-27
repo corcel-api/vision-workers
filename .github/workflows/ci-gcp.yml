@@ -51,6 +51,12 @@ jobs:
           DOCKER_USER: ${{ secrets.DOCKER_USER }}
           DOCKER_PASSW: ${{ secrets.DOCKER_PASSW }}
 
+  deploy-gcp-jobs:
+    needs: build-all
+    runs-on: ubuntu-latest
+    steps:
+      - run: "echo EMPTY_STEP"
+
   deploy-runpod-jobs:
     needs: build-all
     runs-on: ubuntu-latest
@@ -69,7 +75,7 @@ jobs:
           echo "::set-output name=runPodEnabled::$RUNPOD_ENABLED"
 
   gcp-deploy-orchestrator:
-    needs: build-all
+    needs: deploy-gcp-jobs
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -501,6 +507,10 @@ jobs:
           gcloud compute ssh a100-cuda118 --zone us-central1-b --command "docker stop \$(docker ps -q)"
   
 
+
+
+
+
   runpod-deploy-orchestrator:
     if: needs.deploy-runpod-jobs.outputs.runPodEnabled == 'true'
     needs: deploy-runpod-jobs
@@ -531,6 +541,10 @@ jobs:
                           }')
           instance_id=$(echo "$response" | jq -r '.id')
           echo "::set-output name=instance_id::$instance_id"
+          until curl -f https://$instance_id-${{ secrets.PORT_ORCH }}.proxy.runpod.net/docs; do \
+            echo 'Waiting for the Orchestrator server to be ready...'; \
+            sleep 10; \
+          done;
         timeout-minutes: 30
 
   runpod-test-orch-llm:
@@ -621,7 +635,7 @@ jobs:
                             "gpu_type": "${{ secrets.RUNPOD_GPU_TYPE }}",
                             "disk_volume": 500,
                             "docker_image": "corcelio/cicd:llm-server-${{ github.sha }}",
-                            "ports": "6919/http",
+                            "ports": "${{ secrets.PORT_LLM }}/http",
                             "cuda_versions": [
                               "11.8",
                               "12.0",
@@ -633,6 +647,10 @@ jobs:
                           }')
           instance_id=$(echo "$response" | jq -r '.id')
           echo "::set-output name=instance_id::$instance_id"
+          until curl -f https://$instance_id-${{ secrets.PORT_LLM }}.proxy.runpod.net/docs; do \
+            echo 'Waiting for the Orchestrator server to be ready...'; \
+            sleep 10; \
+          done;
         timeout-minutes: 30
 
   runpod-test-llm:
@@ -642,16 +660,18 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v2
 
+      - name: Load model
+        run: |
+          curl -f -X POST https://${{ needs.runpod-deploy-llm-server.outputs.instance_id }}-${{ secrets.PORT_LLM }}.proxy.runpod.net/load_model \
+                  -H "Content-Type: application/json" \
+                  -d '${{ secrets.TEST_LLM_LOAD_QUERY }}'
       - name: Test Runpod LLM
         uses: nick-fields/retry@v3
         with:
           max_attempts: 3
           retry_on: timeout
-          timeout_minutes: 15
+          timeout_minutes: 20
           command: |
-            curl -f -X POST https://${{ needs.runpod-deploy-llm-server.outputs.instance_id }}-${{ secrets.PORT_LLM }}.proxy.runpod.net/load_model \
-                  -H "Content-Type: application/json" \
-                  -d '${{ secrets.TEST_LLM_LOAD_QUERY }}'
             curl -f -X POST https://${{ needs.runpod-deploy-llm-server.outputs.instance_id }}-${{ secrets.PORT_LLM }}.proxy.runpod.net/generate_text \
                   -H "Content-Type: application/json" \
                   -d '${{ secrets.TEST_LLM_CHAT_QUERY }}'
@@ -687,7 +707,7 @@ jobs:
                             "gpu_type": "${{ secrets.RUNPOD_GPU_TYPE }}",
                             "disk_volume": 500,
                             "docker_image": "corcelio/cicd:image-server-${{ github.sha }}",
-                            "ports": "6919/http",
+                            "ports": "${{ secrets.PORT_LLM }}/http",
                             "cuda_versions": [
                               "11.8",
                               "12.0",
@@ -699,6 +719,10 @@ jobs:
                           }')
           instance_id=$(echo "$response" | jq -r '.id')
           echo "::set-output name=instance_id::$instance_id"
+          until curl -f https://$instance_id-${{ secrets.PORT_LLM }}.proxy.runpod.net/docs; do \
+            echo 'Waiting for the Orchestrator server to be ready...'; \
+            sleep 10; \
+          done;
         timeout-minutes: 30
   
   runpod-test-image:
@@ -718,7 +742,6 @@ jobs:
             curl -f -X POST https://${{ needs.runpod-deploy-image-server.outputs.instance_id }}-${{ secrets.PORT_LLM }}.proxy.runpod.net/txt2img \
                 -H "Content-Type: application/json" \
                 --data-binary @ci-tests/image-server-test.json
-
     outputs:
       instance_id: ${{ needs.runpod-deploy-image-server.outputs.instance_id }}
 
