@@ -680,19 +680,19 @@ jobs:
     needs: deploy-runpod-jobs
     runs-on: ubuntu-latest
     outputs:
-      instance_id: ${{ steps.deploy-image.outputs.instance_id }}
-    steps:        
+      instance_id: ${{ steps.deploy-orch.outputs.instance_id }}
+    steps:
       - name: Deploy to Runpod
-        id: deploy-image
+        id: deploy-orch
         run: |
           response=$(curl -f -X POST https://runpod-manager.onrender.com/create-instance \
                           -H "Content-Type: application/json" \
                           -H "API_KEY: ${{ secrets.RUNPOD_MANAGER_API_KEY }}" \
                           -d '{
-                            "instance_name": "vision-workers-ci-build-image-${{ github.sha }}",
+                            "instance_name": "vision-workers-ci-build-llm-${{ github.sha }}",
                             "gpu_type": "${{ secrets.RUNPOD_GPU_TYPE }}",
                             "disk_volume": 500,
-                            "docker_image": "corcelio/cicd:image-server-${{ github.sha }}",
+                            "docker_image": "corcelio/cicd:llm-server-${{ github.sha }}",
                             "ports": "${{ secrets.PORT_LLM }}/http",
                             "cuda_versions": [
                               "11.8",
@@ -706,7 +706,7 @@ jobs:
           instance_id=$(echo "$response" | jq -r '.id')
           echo "::set-output name=instance_id::$instance_id"
           until curl --connect-timeout 30 --max-time 1000 -f https://$instance_id-${{ secrets.PORT_LLM }}.proxy.runpod.net/docs; do \
-            echo 'Waiting for the Image server to be ready...'; \
+            echo 'Waiting for the Orchestrator server to be ready...'; \
             sleep 10; \
           done;
         timeout-minutes: 30
