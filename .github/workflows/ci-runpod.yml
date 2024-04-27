@@ -5,14 +5,19 @@ on:
   pull_request:
   workflow_dispatch:
     inputs:
-      triggerOptionalJobs:
-        description: 'Trigger optional jobs? (yes/no)'
+      start:
+        description: 'Start runpod deployments and tests?'
         required: true
-        default: 'no'
+        default: true
+        type: choice
+        options:
+          - true
+          - false
+
 
 jobs:
   runpod-deploy-orchestrator:
-    if: ${{ github.event.inputs.triggerOptionalJobs == 'yes' }}
+    if:  ${{ inputs.start }}
     runs-on: ubuntu-latest
     outputs:
       instance_id: ${{ steps.deploy-orch.outputs.instance_id }}
@@ -113,7 +118,7 @@ jobs:
         timeout-minutes: 1
 
   runpod-deploy-llm-server:
-    if: ${{ github.event.inputs.triggerOptionalJobs == 'yes' }}
+    if:  ${{ inputs.start }}
     runs-on: ubuntu-latest
     outputs:
       instance_id: ${{ steps.deploy-llm.outputs.instance_id }}
@@ -178,7 +183,7 @@ jobs:
         timeout-minutes: 1
 
   runpod-deploy-image-server:
-    if: ${{ github.event.inputs.triggerOptionalJobs == 'yes' }}
+    if:  ${{ inputs.start }}
     runs-on: ubuntu-latest
     outputs:
       instance_id: ${{ steps.deploy-image.outputs.instance_id }}
