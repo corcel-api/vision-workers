@@ -100,7 +100,7 @@ jobs:
           export_default_credentials: true
 
       - name: Start orchestrator server
-        run: gcloud compute ssh a100-cuda118 --zone us-central1-b --command "docker stop \$(docker ps -q) && docker run -d --gpus all --runtime=nvidia -p ${{ secrets.PORT_ORCH }}:${{ secrets.PORT_ORCH }} -p ${{ secrets.PORT_LLM }}:${{ secrets.PORT_LLM }} corcelio/cicd:orchestrator-${{ github.sha }}"
+        run: gcloud compute ssh a100-cuda118 --zone us-central1-b --command "docker ps -q | grep -q . && docker stop $(docker ps -q) && docker run -d --gpus all --runtime=nvidia -p ${{ secrets.PORT_ORCH }}:${{ secrets.PORT_ORCH }} -p ${{ secrets.PORT_LLM }}:${{ secrets.PORT_LLM }} corcelio/cicd:orchestrator-${{ github.sha }}"
         env:
           PORT_ORCH: ${{ secrets.PORT_ORCH }}  
           PORT_LLM: ${{ secrets.PORT_LLM }}  
@@ -225,7 +225,7 @@ jobs:
 
       - name: Stop docker containers
         run: |
-          gcloud compute ssh a100-cuda118 --zone us-central1-b --command "docker stop \$(docker ps -q)"
+          gcloud compute ssh a100-cuda118 --zone us-central1-b --command "docker ps -q | grep -q . && docker stop $(docker ps -q)"
 
   gcp-deploy-llm:
     needs: gcp-stop-test-orch
@@ -253,7 +253,7 @@ jobs:
           export_default_credentials: true
 
       - name: Start LLM server
-        run: gcloud compute ssh a100-cuda118 --zone us-central1-b --command "docker stop \$(docker ps -q) && docker run -d --gpus all --runtime=nvidia -p ${{ secrets.PORT_LLM }}:${{ secrets.PORT_LLM }} corcelio/cicd:llm-server-${{ github.sha }}"
+        run: gcloud compute ssh a100-cuda118 --zone us-central1-b --command "docker ps -q | grep -q . && docker stop $(docker ps -q) && docker run -d --gpus all --runtime=nvidia -p ${{ secrets.PORT_LLM }}:${{ secrets.PORT_LLM }} corcelio/cicd:llm-server-${{ github.sha }}"
         env:
           PORT_LLM: ${{ secrets.PORT_LLM }}  
 
@@ -352,7 +352,7 @@ jobs:
 
       - name: Stop docker containers
         run: |
-          gcloud compute ssh a100-cuda118 --zone us-central1-b --command "docker stop \$(docker ps -q)"
+          gcloud compute ssh a100-cuda118 --zone us-central1-b --command "docker ps -q | grep -q . && docker stop $(docker ps -q)"
 
   gcp-deploy-image:
     needs: gcp-stop-test-llm
@@ -380,7 +380,7 @@ jobs:
           export_default_credentials: true
 
       - name: Start Image server
-        run: gcloud compute ssh a100-cuda118 --zone us-central1-b --command "docker stop \$(docker ps -q) && docker run -d --gpus all --runtime=nvidia -p ${{ secrets.PORT_LLM }}:${{ secrets.PORT_LLM }} corcelio/cicd:image-server-${{ github.sha }}"
+        run: gcloud compute ssh a100-cuda118 --zone us-central1-b --command "docker ps -q | grep -q . && docker stop $(docker ps -q) && docker run -d --gpus all --runtime=nvidia -p ${{ secrets.PORT_LLM }}:${{ secrets.PORT_LLM }} corcelio/cicd:image-server-${{ github.sha }}"
         env:
           PORT_LLM: ${{ secrets.PORT_LLM }}  
 
@@ -504,13 +504,8 @@ jobs:
 
       - name: Stop docker containers
         run: |
-          gcloud compute ssh a100-cuda118 --zone us-central1-b --command "docker stop \$(docker ps -q)"
+          gcloud compute ssh a100-cuda118 --zone us-central1-b --command "docker ps -q | grep -q . && docker stop $(docker ps -q)"
   
-
-
-
-
-
   runpod-deploy-orchestrator:
     if: needs.deploy-runpod-jobs.outputs.runPodEnabled == 'true'
     needs: deploy-runpod-jobs
