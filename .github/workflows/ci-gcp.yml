@@ -99,9 +99,6 @@ jobs:
           service_account_key: ${{ secrets.GCP_SA_KEY }}
           export_default_credentials: true
 
-      - name: Stop all running containers
-        run: gcloud compute ssh a100-cuda118 --zone us-central1-b --command "nohup docker ps -q | grep -q . && docker stop $(docker ps -q)"
-
       - name: Start orchestrator server
         run: gcloud compute ssh a100-cuda118 --zone us-central1-b --command "docker run -d --gpus all --runtime=nvidia -p ${{ secrets.PORT_ORCH }}:${{ secrets.PORT_ORCH }} -p ${{ secrets.PORT_LLM }}:${{ secrets.PORT_LLM }} corcelio/cicd:orchestrator-${{ github.sha }}"
         env:
@@ -255,9 +252,6 @@ jobs:
           service_account_key: ${{ secrets.GCP_SA_KEY }}
           export_default_credentials: true
 
-      - name: Stop all running containers
-        run: gcloud compute ssh a100-cuda118 --zone us-central1-b --command "nohup docker ps -q | grep -q . && docker stop $(docker ps -q)"
-
       - name: Start LLM server
         run: gcloud compute ssh a100-cuda118 --zone us-central1-b --command "docker run -d --gpus all --runtime=nvidia -p ${{ secrets.PORT_LLM }}:${{ secrets.PORT_LLM }} corcelio/cicd:llm-server-${{ github.sha }}"
         env:
@@ -385,9 +379,6 @@ jobs:
           service_account_key: ${{ secrets.GCP_SA_KEY }}
           export_default_credentials: true
       
-      - name: Stop all running containers
-        run: gcloud compute ssh a100-cuda118 --zone us-central1-b --command "nohup docker ps -q | grep -q . && docker stop $(docker ps -q)"
-
       - name: Start Image server
         run: gcloud compute ssh a100-cuda118 --zone us-central1-b --command "docker run -d --gpus all --runtime=nvidia -p ${{ secrets.PORT_LLM }}:${{ secrets.PORT_LLM }} corcelio/cicd:image-server-${{ github.sha }}"
         env:
@@ -525,11 +516,11 @@ jobs:
       - name: Deploy to Runpod
         id: deploy-orch
         run: |
-          response=$(curl -f -X POST https://runpod-manager.onrender.com/create-instance \
+          response=$(curl --connect-timeout 0 --max-time 0 -f -X POST https://runpod-manager.onrender.com/create-instance \
                           -H "Content-Type: application/json" \
                           -H "API_KEY: ${{ secrets.RUNPOD_MANAGER_API_KEY }}" \
                           -d '{
-                            "instance_name": "vision-workers-ci-build-orch-${{ github.sha }}",
+                            "instance_name": "v-workers-cicd-orch-${{ github.sha }}",
                             "gpu_type": "${{ secrets.RUNPOD_GPU_TYPE }}",
                             "disk_volume": 500,
                             "docker_image": "corcelio/cicd:orchestrator-${{ github.sha }}",
@@ -545,10 +536,6 @@ jobs:
                           }')
           instance_id=$(echo "$response" | jq -r '.id')
           echo "::set-output name=instance_id::$instance_id"
-          until curl --connect-timeout 0 --max-time 0 -f -v https://$instance_id-${{ secrets.PORT_ORCH }}.proxy.runpod.net/docs; do \
-            echo 'Waiting for the Orchestrator server to be ready...'; \
-            sleep 10; \
-          done;
         timeout-minutes: 30
 
   runpod-test-orch-llm:
@@ -615,7 +602,7 @@ jobs:
                           -H "Content-Type: application/json" \
                           -H "API_KEY: ${{ secrets.RUNPOD_MANAGER_API_KEY }}" \
                           -d '{
-                            "instance_name": "vision-workers-ci-build-llm-${{ github.sha }}",
+                            "instance_name": "v-workers-cicd-llm-${{ github.sha }}",
                             "gpu_type": "${{ secrets.RUNPOD_GPU_TYPE }}",
                             "disk_volume": 500,
                             "docker_image": "corcelio/cicd:llm-server-${{ github.sha }}",
@@ -631,10 +618,6 @@ jobs:
                           }')
           instance_id=$(echo "$response" | jq -r '.id')
           echo "::set-output name=instance_id::$instance_id"
-          until curl --connect-timeout 0 --max-time 0 -f -v https://$instance_id-${{ secrets.PORT_LLM }}.proxy.runpod.net/docs; do \
-            echo 'Waiting for the Orchestrator server to be ready...'; \
-            sleep 10; \
-          done;
         timeout-minutes: 30
 
   runpod-test-llm:
@@ -689,10 +672,10 @@ jobs:
                           -H "Content-Type: application/json" \
                           -H "API_KEY: ${{ secrets.RUNPOD_MANAGER_API_KEY }}" \
                           -d '{
-                            "instance_name": "vision-workers-ci-build-llm-${{ github.sha }}",
+                            "instance_name": "v-workers-cicd-img-${{ github.sha }}",
                             "gpu_type": "${{ secrets.RUNPOD_GPU_TYPE }}",
                             "disk_volume": 500,
-                            "docker_image": "corcelio/cicd:llm-server-${{ github.sha }}",
+                            "docker_image": "corcelio/cicd:image-server-${{ github.sha }}",
                             "ports": "${{ secrets.PORT_LLM }}/http",
                             "cuda_versions": [
                               "11.8",
@@ -705,10 +688,6 @@ jobs:
                           }')
           instance_id=$(echo "$response" | jq -r '.id')
           echo "::set-output name=instance_id::$instance_id"
-          until curl --connect-timeout 0 --max-time 0 -f -v https://$instance_id-${{ secrets.PORT_LLM }}.proxy.runpod.net/docs; do \
-            echo 'Waiting for the Orchestrator server to be ready...'; \
-            sleep 10; \
-          done;
         timeout-minutes: 30
   
   runpod-test-image:
