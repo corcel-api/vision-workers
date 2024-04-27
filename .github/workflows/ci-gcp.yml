@@ -529,7 +529,7 @@ jobs:
                             "gpu_type": "${{ secrets.RUNPOD_GPU_TYPE }}",
                             "disk_volume": 500,
                             "docker_image": "corcelio/cicd:orchestrator-${{ github.sha }}",
-                            "ports": "${{ secrets.PORT_ORCH }}/http,${{ secrets.PORT_LLM }}/http",
+                            "ports": "${{ secrets.PORT_ORCH }}/http",
                             "cuda_versions": [
                               "11.8",
                               "12.0",
@@ -563,7 +563,7 @@ jobs:
           command: |
             curl -f -X POST https://${{ needs.runpod-deploy-orchestrator.outputs.instance_id }}-${{ secrets.PORT_ORCH }}.proxy.runpod.net/check-result \
                   -H "Content-Type: application/json" \
-                  -d '${{ secrets.TEST_ORCH_LLM_QUERY }}'
+                  --data-binary @ci-tests/orch_llm.json
     outputs:
       instance_id: ${{ needs.runpod-deploy-orchestrator.outputs.instance_id }}
   
@@ -587,28 +587,8 @@ jobs:
     outputs:
       instance_id: ${{ needs.runpod-test-orch-llm.outputs.instance_id }}
 
-  runpod-test-orch-avatar:
-    needs: runpod-test-orch-image
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v2
-
-      - name: Test Runpod Orchestrator - Image - Avatar
-        uses: nick-fields/retry@v3
-        with:
-          max_attempts: 3
-          retry_on: timeout
-          timeout_minutes: 15
-          command: |
-            curl -f -X POST https://${{ needs.runpod-test-orch-image.outputs.instance_id }}-${{ secrets.PORT_LLM }}.proxy.runpod.net/avatar \
-                  -H "Content-Type: application/json" \
-                  --data-binary @ci-tests/avatar-test.json
-    outputs:
-      instance_id: ${{ needs.runpod-test-orch-image.outputs.instance_id }}
-
   runpod-destroy-orch:
-    needs: runpod-test-orch-avatar
+    needs: runpod-test-orch-image
     runs-on: ubuntu-latest
     steps:
       - name: Destroy Orchestrator runpod instance
@@ -661,20 +641,22 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Load model
+        timeout-minutes: 20
         run: |
           curl -f -X POST https://${{ needs.runpod-deploy-llm-server.outputs.instance_id }}-${{ secrets.PORT_LLM }}.proxy.runpod.net/load_model \
                   -H "Content-Type: application/json" \
-                  -d '${{ secrets.TEST_LLM_LOAD_QUERY }}'
+                  --data-binary @ci-tests/load_model.json
+
       - name: Test Runpod LLM
         uses: nick-fields/retry@v3
         with:
           max_attempts: 3
           retry_on: timeout
-          timeout_minutes: 20
+          timeout_minutes: 1
           command: |
             curl -f -X POST https://${{ needs.runpod-deploy-llm-server.outputs.instance_id }}-${{ secrets.PORT_LLM }}.proxy.runpod.net/generate_text \
                   -H "Content-Type: application/json" \
-                  -d '${{ secrets.TEST_LLM_CHAT_QUERY }}'
+                  --data-binary @ci-tests/query_llm.json
 
     outputs:
       instance_id: ${{ needs.runpod-deploy-llm-server.outputs.instance_id }}
