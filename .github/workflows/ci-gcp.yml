@@ -537,15 +537,6 @@ jobs:
           instance_id=$(echo "$response" | jq -r '.id')
           echo "::set-output name=instance_id::$instance_id"
         timeout-minutes: 30
-      
-      - name: Wait until server up
-        run: |
-          until curl --connect-timeout 0 --max-time 0 https://${{ needs.runpod-deploy-orchestrator.outputs.instance_id }}-${{ secrets.PORT_ORCH }}.proxy.runpod.net/docs; do
-            echo 'Waiting for the runpod orchestrator instance to be ready...'
-            sleep 10
-          done
-          echo 'Instance is ready!'
-        timeout-minutes: 30
         
   runpod-test-orch-llm:
     needs: runpod-deploy-orchestrator
@@ -634,15 +625,6 @@ jobs:
           instance_id=$(echo "$response" | jq -r '.id')
           echo "::set-output name=instance_id::$instance_id"
         timeout-minutes: 30
-      
-      - name: Wait until server up
-        run: |
-          until curl --connect-timeout 0 --max-time 0 https://${{ needs.runpod-deploy-llm-server.outputs.instance_id }}-${{ secrets.PORT_LLM }}.proxy.runpod.net/docs; do
-            echo 'Waiting for the runpod LLM server instance to be ready...'
-            sleep 10
-          done
-          echo 'Instance is ready!'
-        timeout-minutes: 30
 
   runpod-test-llm:
     needs: runpod-deploy-llm-server
@@ -662,12 +644,10 @@ jobs:
         uses: nick-fields/retry@v3
         with:
           max_attempts: 15
-          retry_on: timeout
-          timeout_minutes: 2
           command: |
             curl --connect-timeout 0 --max-time 0 -v -X POST https://${{ needs.runpod-deploy-llm-server.outputs.instance_id }}-${{ secrets.PORT_LLM }}.proxy.runpod.net/generate_text \
                   -H "Content-Type: application/json" \
-                  --data-binary @/home/runner/work/vision-workers/vision-workers/ci-tests/query_llm.json
+                  --data-binary @/home/runner/work/vision-workers/vision-workers/ci-tests/query_llm.json && sleep 60
 
     outputs:
       instance_id: ${{ needs.runpod-deploy-llm-server.outputs.instance_id }}
@@ -718,15 +698,6 @@ jobs:
                           }')
           instance_id=$(echo "$response" | jq -r '.id')
           echo "::set-output name=instance_id::$instance_id"
-        timeout-minutes: 30
-
-      - name: Wait until server up
-        run: |
-          until curl --connect-timeout 0 --max-time 0 https://${{ needs.runpod-deploy-image-server.outputs.instance_id }}-${{ secrets.PORT_LLM }}.proxy.runpod.net/docs; do
-            echo 'Waiting for the runpod LLM server instance to be ready...'
-            sleep 10
-          done
-          echo 'Instance is ready!'
         timeout-minutes: 30
   
   runpod-test-image:
