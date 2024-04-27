@@ -64,7 +64,7 @@ jobs:
       runPodEnabled: ${{ steps.read_config.outputs.runPodEnabled }}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Read cicd config file
         id: read_config
@@ -225,7 +225,7 @@ jobs:
 
       - name: Stop docker containers
         run: |
-          gcloud compute ssh a100-cuda118 --zone us-central1-b --command "docker stop $(docker ps -q)"
+          gcloud compute ssh a100-cuda118 --zone us-central1-b --command "docker stop \$(docker ps -q)"
 
   gcp-deploy-llm:
     needs: gcp-stop-test-orch
@@ -352,7 +352,7 @@ jobs:
 
       - name: Stop docker containers
         run: |
-          gcloud compute ssh a100-cuda118 --zone us-central1-b --command "docker stop $(docker ps -q)"
+          gcloud compute ssh a100-cuda118 --zone us-central1-b --command "docker stop \$(docker ps -q)"
 
   gcp-deploy-image:
     needs: gcp-stop-test-llm
@@ -504,7 +504,7 @@ jobs:
 
       - name: Stop docker containers
         run: |
-          gcloud compute ssh a100-cuda118 --zone us-central1-b --command "docker stop $(docker ps -q)"
+          gcloud compute ssh a100-cuda118 --zone us-central1-b --command "docker stop \$(docker ps -q)"
   
   runpod-deploy-orchestrator:
     if: needs.deploy-runpod-jobs.outputs.runPodEnabled == 'true'
@@ -543,7 +543,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Test Runpod Orchestrator - LLM
         uses: nick-fields/retry@v3
@@ -563,7 +563,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Test Runpod Orchestrator - Image
         uses: nick-fields/retry@v3
@@ -625,7 +625,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Load model
         timeout-minutes: 20
@@ -695,7 +695,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Test Runpod Image
         uses: nick-fields/retry@v3
