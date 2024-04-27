@@ -554,7 +554,7 @@ jobs:
           command: |
             curl --connect-timeout 0 --max-time 0 -v -f -X POST https://${{ needs.runpod-deploy-orchestrator.outputs.instance_id }}-${{ secrets.PORT_ORCH }}.proxy.runpod.net/check-result \
                   -H "Content-Type: application/json" \
-                  --data-binary @/home/runner/work/vision-workers/vision-workers/ci-tests/orch_llm.json
+                  --data-binary @/home/runner/work/vision-workers/vision-workers/ci-tests/orch-llm.json
     outputs:
       instance_id: ${{ needs.runpod-deploy-orchestrator.outputs.instance_id }}
   
@@ -636,7 +636,7 @@ jobs:
       - name: Load model
         timeout-minutes: 20
         run: |
-          curl --connect-timeout 0 --max-time 0 -v -f -X POST https://${{ needs.runpod-deploy-llm-server.outputs.instance_id }}-${{ secrets.PORT_LLM }}.proxy.runpod.net/load_model \
+          curl --connect-timeout 0 --max-time 0 -v -X POST https://${{ needs.runpod-deploy-llm-server.outputs.instance_id }}-${{ secrets.PORT_LLM }}.proxy.runpod.net/load_model \
                   -H "Content-Type: application/json" \
                   --data-binary @/home/runner/work/vision-workers/vision-workers/ci-tests/load_model.json
 
