@@ -612,6 +612,7 @@ jobs:
       - name: Deploy to Runpod
         id: deploy-orch
         run: |
+          sleep 5
           response=$(curl --connect-timeout 0 --max-time 0 --retry 5 -X POST https://runpod-manager.onrender.com/create-instance \
                           -H "Content-Type: application/json" \
                           -H "API_KEY: ${{ secrets.RUNPOD_MANAGER_API_KEY }}" \
@@ -696,6 +697,7 @@ jobs:
       - name: Deploy to Runpod
         id: deploy-orch
         run: |
+          sleep 10
           response=$(curl --connect-timeout 0 --max-time 0 --retry 5 -X POST https://runpod-manager.onrender.com/create-instance \
                           -H "Content-Type: application/json" \
                           -H "API_KEY: ${{ secrets.RUNPOD_MANAGER_API_KEY }}" \
