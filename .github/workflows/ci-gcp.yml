@@ -602,10 +602,10 @@ jobs:
     needs: deploy-runpod-jobs
     runs-on: ubuntu-latest
     outputs:
-      instance_id: ${{ steps.deploy-llm.outputs.instance_id }}
-    steps:        
+      instance_id: ${{ steps.deploy-orch.outputs.instance_id }}
+    steps:
       - name: Deploy to Runpod
-        id: deploy-llm
+        id: deploy-orch
         run: |
           response=$(curl -f -X POST https://runpod-manager.onrender.com/create-instance \
                           -H "Content-Type: application/json" \
