@@ -37,20 +37,20 @@ jobs:
       
       - name: Wait for Instance to be Ready
         run: |
-          until gcloud compute ssh a100-cuda118 --zone us-central1-f --command "echo 'Instance is up'"; do
+          until gcloud compute ssh a100-cuda118 --zone us-central1-b --command "echo 'Instance is up'"; do
             echo 'Waiting for the instance to be ready...'
             sleep 10
           done
           echo 'Instance is ready!'
 
       - name: Clear remote directory
-        run: gcloud compute ssh a100-cuda118 --zone us-central1-f --command "rm -rf /home/runner/*"
+        run: gcloud compute ssh a100-cuda118 --zone us-central1-b --command "rm -rf /home/runner/*"
 
       - name: Copy updated repository to remote server
-        run: gcloud compute scp --recurse /home/runner/work/vision-workers/vision-workers a100-cuda118:/home/runner/vision-workers --zone us-central1-f
+        run: gcloud compute scp --recurse /home/runner/work/vision-workers/vision-workers a100-cuda118:/home/runner/vision-workers --zone us-central1-b
       
       - name: Run script on remote server
-        run: gcloud compute ssh a100-cuda118 --zone us-central1-f --command "export PROJECT_ID=${{ secrets.GCP_PROJECT_ID }}; export BUILD_ID=${{ github.run_id }}; docker login --username=${{ secrets.DOCKER_USER }} --password=${{ secrets.DOCKER_PASSW }}; cd /home/runner/vision-workers && chmod +x ./build-docker-ci-remote.sh && bash ./build-docker-ci-remote.sh"
+        run: gcloud compute ssh a100-cuda118 --zone us-central1-b --command "export PROJECT_ID=${{ secrets.GCP_PROJECT_ID }}; export BUILD_ID=${{ github.run_id }}; docker login --username=${{ secrets.DOCKER_USER }} --password=${{ secrets.DOCKER_PASSW }}; cd /home/runner/vision-workers && chmod +x ./build-docker-ci-remote.sh && bash ./build-docker-ci-remote.sh"
         env:
           PROJECT_ID: ${{ secrets.PROJECT_ID }}
           BUILD_ID: ${{ github.run_id }}
@@ -83,14 +83,14 @@ jobs:
           export_default_credentials: true
 
       - name: Start orchestrator server
-        run: gcloud compute ssh a100-cuda118 --zone us-central1-f --command "docker run --gpus all --runtime=nvidia -p ${{ secrets.PORT_ORCH }}:${{ secrets.PORT_ORCH }} -p ${{ secrets.PORT_LLM }}:${{ secrets.PORT_LLM }} corcelio/cicd:orchestrator-${{ github.run_id }}"
+        run: gcloud compute ssh a100-cuda118 --zone us-central1-b --command "docker run --gpus all --runtime=nvidia -p ${{ secrets.PORT_ORCH }}:${{ secrets.PORT_ORCH }} -p ${{ secrets.PORT_LLM }}:${{ secrets.PORT_LLM }} corcelio/cicd:orchestrator-${{ github.run_id }}"
         env:
           PORT_ORCH: ${{ secrets.PORT_ORCH }}  
           PORT_LLM: ${{ secrets.PORT_LLM }}  
 
       - name: Wait for Orchestrator to be ready
         run: |
-          gcloud compute ssh a100-cuda118 --zone us-central1-f --command "\
+          gcloud compute ssh a100-cuda118 --zone us-central1-b --command "\
           until curl -f localhost:${{ secrets.PORT_ORCH }}/docs; do \
             echo 'Waiting for the Orchestrator to be ready...'; \
             sleep 10; \
@@ -126,7 +126,7 @@ jobs:
           export_default_credentials: true
 
       - name: Copy json data for query
-        run: gcloud compute scp --recurse /home/runner/work/vision-workers/vision-workers/ci-tests/orch-image-txt2img.json a100-cuda118:/home/runner/orch-image-txt2img.json --zone us-central1-f
+        run: gcloud compute scp --recurse /home/runner/work/vision-workers/vision-workers/ci-tests/orch-image-txt2img.json a100-cuda118:/home/runner/orch-image-txt2img.json --zone us-central1-b
       
       - name: Test gcp Orchestrator - Image
         uses: nick-fields/retry@v3
@@ -135,7 +135,7 @@ jobs:
           retry_on: timeout
           timeout_minutes: 15
           command: |
-            gcloud compute ssh a100-cuda118 --zone us-central1-f --command "\
+            gcloud compute ssh a100-cuda118 --zone us-central1-b --command "\
               curl -f -X POST localhost:${{ secrets.PORT_ORCH }}/check-result \
               -H 'Content-Type: application/json' \
               --data-binary @/home/runner/orch-image-txt2img.json"
@@ -168,7 +168,7 @@ jobs:
           export_default_credentials: true
 
       - name: Copy json data to remote
-        run: gcloud compute scp --recurse /home/runner/work/vision-workers/vision-workers/ci-tests/avatar-test.json a100-cuda118:/home/runner/avatar-test.json --zone us-central1-f
+        run: gcloud compute scp --recurse /home/runner/work/vision-workers/vision-workers/ci-tests/avatar-test.json a100-cuda118:/home/runner/avatar-test.json --zone us-central1-b
       
       - name: Test gcp Orchestrator - Image - Avatar
         uses: nick-fields/retry@v3
@@ -177,7 +177,7 @@ jobs:
           retry_on: timeout
           timeout_minutes: 15
           command: |
-            gcloud compute ssh a100-cuda118 --zone us-central1-f --command "\
+            gcloud compute ssh a100-cuda118 --zone us-central1-b --command "\
               curl -f -X POST localhost:${{ secrets.PORT_LLM }}/avatar \
               -H 'Content-Type: application/json' \
               --data-binary @/home/runner/avatar-test.json"
@@ -210,7 +210,7 @@ jobs:
           export_default_credentials: true
 
       - name: Copy json data to remote
-        run: gcloud compute scp --recurse /home/runner/work/vision-workers/vision-workers/ci-tests/orch-llm.json a100-cuda118:/home/runner/orch-llm.json --zone us-central1-f
+        run: gcloud compute scp --recurse /home/runner/work/vision-workers/vision-workers/ci-tests/orch-llm.json a100-cuda118:/home/runner/orch-llm.json --zone us-central1-b
       
       - name: Test gcp Orchestrator - LLM
         uses: nick-fields/retry@v3
@@ -219,7 +219,7 @@ jobs:
           retry_on: timeout
           timeout_minutes: 15
           command: |
-            gcloud compute ssh a100-cuda118 --zone us-central1-f --command "\
+            gcloud compute ssh a100-cuda118 --zone us-central1-b --command "\
               curl -f -X POST localhost:${{ secrets.PORT_ORCH }}/check-result \
               -H 'Content-Type: application/json' \
               --data-binary @/home/runner/orch-llm.json"
@@ -250,7 +250,7 @@ jobs:
 
       - name: Stop docker containers
         run: |
-          gcloud compute ssh a100-cuda118 --zone us-central1-f --command "docker stop \$(docker ps -q)"
+          gcloud compute ssh a100-cuda118 --zone us-central1-b --command "docker stop \$(docker ps -q)"
 
   gcp-deploy-llm:
     needs: gcp-stop-test-orch
@@ -278,13 +278,13 @@ jobs:
           export_default_credentials: true
 
       - name: Start LLM server
-        run: gcloud compute ssh a100-cuda118 --zone us-central1-f --command "docker run -d --gpus all --runtime=nvidia -p ${{ secrets.PORT_LLM }}:${{ secrets.PORT_LLM }} corcelio/cicd:llm-server-${{ github.run_id }}"
+        run: gcloud compute ssh a100-cuda118 --zone us-central1-b --command "docker run -d --gpus all --runtime=nvidia -p ${{ secrets.PORT_LLM }}:${{ secrets.PORT_LLM }} corcelio/cicd:llm-server-${{ github.run_id }}"
         env:
           PORT_LLM: ${{ secrets.PORT_LLM }}  
 
       - name: Wait for LLM server to be ready
         run: |
-          gcloud compute ssh a100-cuda118 --zone us-central1-f --command "\
+          gcloud compute ssh a100-cuda118 --zone us-central1-b --command "\
           until curl -f localhost:${{ secrets.PORT_LLM }}/docs; do \
             echo 'Waiting for the LLM server to be ready...'; \
             sleep 10; \
@@ -326,7 +326,7 @@ jobs:
           retry_on: timeout
           timeout_minutes: 15
           command: |
-            gcloud compute ssh a100-cuda118 --zone us-central1-f --command "\
+            gcloud compute ssh a100-cuda118 --zone us-central1-b --command "\
               curl -f -X POST localhost:${{ secrets.PORT_LLM }}/load_model \
               -H 'Content-Type: application/json' \
               -d '{
@@ -344,7 +344,7 @@ jobs:
           retry_on: timeout
           timeout_minutes: 15
           command: |
-            gcloud compute ssh a100-cuda118 --zone us-central1-f --command "\
+            gcloud compute ssh a100-cuda118 --zone us-central1-b --command "\
               curl -f -X POST localhost:${{ secrets.PORT_LLM }}/generate_text \
               -H 'Content-Type: application/json' \
               -d '{
@@ -387,7 +387,7 @@ jobs:
 
       - name: Stop docker containers
         run: |
-          gcloud compute ssh a100-cuda118 --zone us-central1-f --command "docker stop \$(docker ps -q)"
+          gcloud compute ssh a100-cuda118 --zone us-central1-b --command "docker stop \$(docker ps -q)"
 
   gcp-deploy-image:
     needs: gcp-stop-test-llm
@@ -415,13 +415,13 @@ jobs:
           export_default_credentials: true
 
       - name: Start Image server
-        run: gcloud compute ssh a100-cuda118 --zone us-central1-f --command "docker run --gpus all --runtime=nvidia -p ${{ secrets.PORT_LLM }}:${{ secrets.PORT_LLM }} corcelio/cicd:image-server-${{ github.run_id }}"
+        run: gcloud compute ssh a100-cuda118 --zone us-central1-b --command "docker run --gpus all --runtime=nvidia -p ${{ secrets.PORT_LLM }}:${{ secrets.PORT_LLM }} corcelio/cicd:image-server-${{ github.run_id }}"
         env:
           PORT_LLM: ${{ secrets.PORT_LLM }}  
 
       - name: Wait for Image server to be ready
         run: |
-          gcloud compute ssh a100-cuda118 --zone us-central1-f --command "\
+          gcloud compute ssh a100-cuda118 --zone us-central1-b --command "\
           until curl -f localhost:${{ secrets.PORT_LLM }}/docs; do \
             echo 'Waiting for the Image server to be ready...'; \
             sleep 10; \
@@ -457,7 +457,7 @@ jobs:
           export_default_credentials: true
 
       - name: Copy json data for query
-        run: gcloud compute scp --recurse /home/runner/work/vision-workers/vision-workers/ci-tests/image-server-test.json a100-cuda118:/home/runner/image-server-test.json --zone us-central1-f
+        run: gcloud compute scp --recurse /home/runner/work/vision-workers/vision-workers/ci-tests/image-server-test.json a100-cuda118:/home/runner/image-server-test.json --zone us-central1-b
       
       - name: Test gcp Image server
         uses: nick-fields/retry@v3
@@ -466,7 +466,7 @@ jobs:
           retry_on: timeout
           timeout_minutes: 15
           command: |
-            gcloud compute ssh a100-cuda118 --zone us-central1-f --command "\
+            gcloud compute ssh a100-cuda118 --zone us-central1-b --command "\
               curl -f -X POST localhost:${{ secrets.PORT_LLM }}/txt2img \
               -H 'Content-Type: application/json' \
               --data-binary @/home/runner/image-server-test.json"
