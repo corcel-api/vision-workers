@@ -1,4 +1,4 @@
-name: Runpod deployment
+name: deploy & test - RunPod
 
 on:
   workflow_dispatch:
@@ -11,7 +11,6 @@ on:
 jobs:
   runpod-deploy-orchestrator:
     if: ${{ github.event.inputs.triggerOptionalJobs == 'yes' }}
-    needs: build-all
     runs-on: ubuntu-latest
     outputs:
       instance_id: ${{ steps.deploy-orch.outputs.instance_id }}
@@ -113,7 +112,6 @@ jobs:
 
   runpod-deploy-llm-server:
     if: ${{ github.event.inputs.triggerOptionalJobs == 'yes' }}
-    needs: build-all
     runs-on: ubuntu-latest
     outputs:
       instance_id: ${{ steps.deploy-llm.outputs.instance_id }}
@@ -179,7 +177,6 @@ jobs:
 
   runpod-deploy-image-server:
     if: ${{ github.event.inputs.triggerOptionalJobs == 'yes' }}
-    needs: build-all
     runs-on: ubuntu-latest
     outputs:
       instance_id: ${{ steps.deploy-image.outputs.instance_id }}

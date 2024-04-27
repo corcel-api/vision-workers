@@ -1,14 +1,8 @@
-name: Vision Workers CICD
+name: Build, deploy & test - GCP
 
 on:
   push:
   pull_request:
-  workflow_dispatch:  
-    inputs:
-      triggerOptionalJobs:
-        description: 'Trigger optional jobs? (yes/no)'
-        required: true
-        default: 'no'
 
 jobs:
   build-all:
