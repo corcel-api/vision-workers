@@ -589,7 +589,7 @@ jobs:
           retry_on: timeout
           timeout_minutes: 1
           command: |
-            curl --connect-timeout 0 --max-time 0 -v -X DELETE https://runpod-manager.onrender.com/delete-instance/${{ needs.runpod-test-orch-avatar.outputs.instance_id }} \
+            curl --connect-timeout 0 --max-time 0 -v -X DELETE https://runpod-manager.onrender.com/delete-instance/${{ needs.runpod-test-orch-image.outputs.instance_id }} \
                 -H "API_KEY: ${{ secrets.RUNPOD_MANAGER_API_KEY }}"
         timeout-minutes: 1
 
@@ -644,10 +644,11 @@ jobs:
         uses: nick-fields/retry@v3
         with:
           max_attempts: 15
+          timeout_minutes: 3
           command: |
             curl --connect-timeout 0 --max-time 0 -v -X POST https://${{ needs.runpod-deploy-llm-server.outputs.instance_id }}-${{ secrets.PORT_LLM }}.proxy.runpod.net/generate_text \
                   -H "Content-Type: application/json" \
-                  --data-binary @/home/runner/work/vision-workers/vision-workers/ci-tests/query_llm.json && sleep 60
+                  --data-binary @/home/runner/work/vision-workers/vision-workers/ci-tests/query_llm.json
 
     outputs:
       instance_id: ${{ needs.runpod-deploy-llm-server.outputs.instance_id }}
