@@ -1,6 +1,10 @@
 name: deploy & test - RunPod
 
 on:
+  repository_dispatch:
+    types: [trigger-runpod]
+  push:
+  pull_request:
   workflow_dispatch:
     inputs:
       start:
