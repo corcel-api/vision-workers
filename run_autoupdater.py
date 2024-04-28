@@ -1,5 +1,6 @@
 import subprocess
 import time
+import requests
 import os
 import argparse
 import logging
@@ -7,7 +8,23 @@ from typing import List
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
-def _initialize_git_if_needed(repo_url: str, branch: str) -> None:
+def _wait_for_service(url, timeout=300, interval=20):
+    logging.info("Waiting for service to be up before any autoupdate action")
+    start_time = time.time()
+    while (time.time() - start_time) < timeout:
+        try:
+            response = requests.get(url)
+            if response.status_code == 200:
+                logging.info("Service is up!")
+                return True
+        except requests.exceptions.RequestException as e:
+            logging.error(f"Failed to connect, retrying in {interval} seconds...")
+        time.sleep(interval)
+    logging.error("Service did not respond in time.")
+    return False
+
+
+def _initialize_git_if_needed(repo_url: str, branch: str, ports_to_kill: list, restart_script: str) -> None:
     if not os.path.isdir('.git'):
         logging.info("No .git directory found. Initializing and setting up remote repository...")
         subprocess.run(["git", "init"], check=True)
@@ -16,6 +33,10 @@ def _initialize_git_if_needed(repo_url: str, branch: str) -> None:
         subprocess.run(["git", "reset", "--hard"], check=True)
         subprocess.run(["git", "clean", "-fd"], check=True)
         subprocess.run(["git", "checkout", branch], check=True)
+        _stop_server_on_port(ports_to_kill)
+        subprocess.run(f"chmod +x {restart_script}", shell=True)
+        subprocess.Popen(f"/bin/sh {restart_script}", shell=True)
+        logging.info("Finished running the autoupdate steps! Server is ready.")
     else:
         logging.info(".git directory already exists.")
 
@@ -107,8 +128,11 @@ if __name__ == "__main__":
     service_port = int(os.getenv('SERVICE_SERVER_PORT', 6919))
     comfyui_port = int(os.getenv('COMFYUI_SERVER_PORT', 8188))
 
-    time.sleep(auto_updates_sleep)
-    _initialize_git_if_needed(repo_url=repo_url, branch=git_branch)
+    ping_url = f'localhost:{orchestrator_port}/docs'
+    _wait_for_service(ping_url)
+    
+    _initialize_git_if_needed(repo_url=repo_url, branch=git_branch, 
+                              ports_to_kill=[orchestrator_port], restart_script=args.restart_script)
 
     logging.info(f"Listening for Git tag updates with tags containing the token: {env_autoup_token}")
 

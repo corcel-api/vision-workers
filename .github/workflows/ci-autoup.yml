@@ -2,6 +2,8 @@ name: Orchestrator AutoUpdates
 
 on:
   push:
+    branches:
+      - main
 
 jobs:
   build:
@@ -129,7 +131,7 @@ jobs:
           export_default_credentials: true
 
       - name: Start orchestrator server
-        run: gcloud compute ssh ${{ env.GCP_GPU_NAME }} --zone ${{ env.GCP_GPU_ZONE }} --command "export BUILD_ID=${{ github.run_id }}; docker run -d --gpus all --runtime=nvidia -p ${{ env.ORCH_PORT }}:${{ env.ORCH_PORT }} -p ${{ env.LLM_PORT }}:${{ env.LLM_PORT }} -e AUTOUP_SLEEP=300 corcelio/cicd:autoup-orchestrator-$BUILD_ID"
+        run: gcloud compute ssh ${{ env.GCP_GPU_NAME }} --zone ${{ env.GCP_GPU_ZONE }} --command "export BUILD_ID=${{ github.run_id }}; docker run -d --gpus all --runtime=nvidia -p ${{ env.ORCH_PORT }}:${{ env.ORCH_PORT }} -p ${{ env.LLM_PORT }}:${{ env.LLM_PORT }} -e AUTOUP_SLEEP=300 -e ENV_TOKEN_AUTOUP=dev corcelio/cicd:autoup-orchestrator-$BUILD_ID"
         env:
           PORT_ORCH: ${{ env.ORCH_PORT }}  
           LLM_PORT: ${{ env.LLM_PORT }}  
