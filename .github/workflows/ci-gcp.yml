@@ -19,13 +19,8 @@ jobs:
         run: |
           chmod +x ./runner-fetch-config.sh
           ./runner-fetch-config.sh
-          
 
   build-all:
-    needs: set-config
-    outputs: 
-      gcp-workflow: ${{ needs.set-config.outputs.gcp-workflow }}
-      runpod-workflow: ${{ needs.set-config.outputs.runpod-workflow }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -78,22 +73,40 @@ jobs:
           DOCKER_PASSW: ${{ secrets.DOCKER_PASSW }}
 
   deploy-gcp-jobs:  
-    if: needs.build-all.outputs.gcp-workflow == 'true'
     needs: build-all
     runs-on: ubuntu-latest
+    outputs:
+      gcp-workflow: ${{ steps.read_config.outputs.gcp-workflow }}
     steps:
-      - name: Placeholder Step
-        run: echo "This is a placeholder step"
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
+      - name: Read cicd config file
+        id: read_config
+        run: |
+          chmod +x ./runner-fetch-config.sh
+          ./runner-fetch-config.sh
+          echo "gcp-workflow=$GCP_ENABLED" >> $GITHUB_OUTPUT
+      
 
   deploy-runpod-jobs:
-    if: needs.build-all.outputs.runpod-workflow == 'true'
     needs: build-all
     runs-on: ubuntu-latest
+    outputs:
+      runpod-workflow: ${{ steps.read_config.outputs.runpod-workflow }}
     steps:
-      - name: Placeholder Step
-        run: echo "This is a placeholder step"
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
+      - name: Read cicd config file
+        id: read_config
+        run: |
+          chmod +x ./runner-fetch-config.sh
+          ./runner-fetch-config.sh
+          echo "runpod-workflow=$RUNPOD_ENABLED" >> $GITHUB_OUTPUT
 
   gcp-deploy-orchestrator:
+    if: needs.deploy-gcp-jobs.outputs.gcp-workflow == 'true'
     needs: deploy-gcp-jobs
     runs-on: ubuntu-latest
     steps:
@@ -601,6 +614,7 @@ jobs:
           gcloud compute ssh ${{ env.GCP_GPU_NAME }} --zone ${{ env.GCP_GPU_ZONE }} --command "docker stop \$(docker ps -q)"
   
   runpod-deploy-orchestrator:
+    if: needs.deploy-runpod-jobs.outputs.runpod-workflow == 'true'
     needs: deploy-runpod-jobs
     runs-on: ubuntu-latest
     outputs:
@@ -708,6 +722,7 @@ jobs:
         timeout-minutes: 1
 
   runpod-deploy-llm-server:
+    if: needs.deploy-runpod-jobs.outputs.runpod-workflow == 'true'
     needs: deploy-runpod-jobs
     runs-on: ubuntu-latest
     outputs:
@@ -797,6 +812,7 @@ jobs:
         timeout-minutes: 1
 
   runpod-deploy-image-server:
+    if: needs.deploy-runpod-jobs.outputs.runpod-workflow == 'true'
     needs: deploy-runpod-jobs
     runs-on: ubuntu-latest
     outputs:
@@ -810,7 +826,7 @@ jobs:
         run: |
           chmod +x ./runner-fetch-config.sh
           ./runner-fetch-config.sh
-          
+
       - name: Deploy to Runpod
         id: deploy-orch
         run: |
