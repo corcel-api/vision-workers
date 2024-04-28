@@ -61,7 +61,7 @@ jobs:
     needs: build-all
     runs-on: ubuntu-latest
     outputs:
-      gcpWorkflow: ${{ steps.read_config.outputs.gcp-workflow }}
+      gcp-workflow: ${{ steps.set_config.outputs.gcp-workflow }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -71,13 +71,17 @@ jobs:
         run: |
           chmod +x ./runner-fetch-config.sh
           ./runner-fetch-config.sh
+      
+      - name: Set the GCP_ENABLED variable
+        id: set_config
+        run: |
           echo "gcp-workflow=${{ env.GCP_ENABLED }}" >> $GITHUB_OUTPUT
 
   deploy-runpod-jobs:
     needs: build-all
     runs-on: ubuntu-latest
     outputs:
-      runpod-workflow: ${{ steps.read_config.outputs.runpod-workflow }}
+      runpod-workflow: ${{ steps.set_config.outputs.runpod-workflow }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -87,6 +91,10 @@ jobs:
         run: |
           chmod +x ./runner-fetch-config.sh
           ./runner-fetch-config.sh
+      
+      - name: Set the GCP_ENABLED variable
+        id: set_config
+        run: |
           echo "runpod-workflow=${{ env.RUNPOD_ENABLED }}" >> $GITHUB_OUTPUT
 
   gcp-deploy-orchestrator:
