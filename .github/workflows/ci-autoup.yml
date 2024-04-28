@@ -52,16 +52,16 @@ jobs:
     name: Build Job
     runs-on: ubuntu-latest
     outputs:
-      previous_tag: ${{ steps.setup.outputs.previous_tag }}
+      previous_tag: ${{ needs.get_tags.outputs.previous_tag }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
         with:
           fetch-depth: 0
           tags: true
-      - name: Recover N-1 tag
+      - name: Recover N-1 tag & checkout
         run: |
-          PREVIOUS_TAG=$(echo "${{ needs.setup.outputs.previous_tag }}" | base64 --decode)
+          PREVIOUS_TAG=$(echo "${{ needs.get_tags.outputs.previous_tag }}" | base64 --decode)
           echo "Building project tagged as $PREVIOUS_TAG"
           git checkout $PREVIOUS_TAG
 
