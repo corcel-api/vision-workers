@@ -162,7 +162,6 @@ jobs:
           gcloud compute ssh ${{ env.GCP_GPU_NAME }} --zone ${{ env.GCP_GPU_ZONE }} --command "\
           until ! curl --connect-timeout 1 --max-time 1 localhost:${{ env.ORCH_PORT }}/docs; do \
             echo 'Waiting for the Orchestrator to be reload...'; \
-            sleep 10; \
           done; \
           echo 'Orchestrator is reloading!'"
 
