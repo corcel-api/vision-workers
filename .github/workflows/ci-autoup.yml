@@ -17,6 +17,8 @@ jobs:
         id: list_tags
         run: |
           git tag > tags.txt
+          echo "tags : "
+          cat tags.txt
           echo "tags=$(cat tags.txt)" >> $GITHUB_ENV
 
       - name: Get the before latest tag (N-1)
