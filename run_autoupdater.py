@@ -111,6 +111,7 @@ if __name__ == "__main__":
     service_port = int(os.getenv('SERVICE_SERVER_PORT', 6919))
     comfyui_port = int(os.getenv('COMFYUI_SERVER_PORT', 8188))
 
+    time.sleep(auto_updates_sleep)
     _initialize_git_if_needed(repo_url=repo_url, branch=git_branch)
 
     logging.info(f"Listening for Git tag updates with tags containing the token: {env_autoup_token}, and only reloading if the token {server_special_token} is specified")
