@@ -15,14 +15,21 @@ jobs:
       
       - name: List all tags
         id: list_tags
-        run: echo "tags=$(git tag)" >> $GITHUB_OUTPUT
-      
+        run: |
+          git tag > tags.txt
+          echo "tags=$(cat tags.txt)" >> $GITHUB_ENV
+
       - name: Get the before latest tag (N-1)
         id: get_tags
         run: |
-          TAGS=(${{ steps.list_tags.outputs.tags }})
-          PREVIOUS_TAG=${TAGS[-2]} # Getting the second last item in the array
+          TAGS=($(cat tags.txt))
+          if [ ${#TAGS[@]} -lt 2 ]; then
+            echo "Not enough tags to perform operation. Need at least two tags."
+            exit 1
+          fi
+          PREVIOUS_TAG=${TAGS[-2]}
           echo "previous_tag=$PREVIOUS_TAG" >> $GITHUB_OUTPUT
+
 
       - name: Checkout to N-1 Tag
         run: git checkout ${{ steps.get_tags.outputs.previous_tag }}
