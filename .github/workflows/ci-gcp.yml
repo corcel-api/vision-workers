@@ -8,6 +8,7 @@ jobs:
   set-config:
     runs-on: ubuntu-latest
     outputs:
+      gcp-workflow: ${{ steps.read_config.outputs.gcp-workflow }}
       gcp-gpu-name: ${{ steps.read_config.outputs.gcp-gpu-name }}
       gcp-gpu-zone: ${{ steps.read_config.outputs.gcp-gpu-zone }}
       orchestrator-port: ${{ steps.read_config.outputs.orchestrator-port }}
