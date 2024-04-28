@@ -18,8 +18,6 @@ else
     echo "Disk usage ($disk_usage %) is below or equal to 50%, no action needed."
 fi
 
-
-
 # Build & push images
 docker build -f Dockerfile.orchestrator -t corcelio/cicd:orchestrator-$BUILD_ID .
 docker push corcelio/cicd:orchestrator-$BUILD_ID
