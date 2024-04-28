@@ -83,7 +83,7 @@ ENV SERVICE_SERVER_PORT=${SERVICE_SERVER_PORT}
 ENV COMFYUI_SERVER_PORT=${COMFYUI_SERVER_PORT}
 
 # Change HF cache dir
-RUN mkdir /app/cache/
-ENV HF_HOME=/app/cache/
+RUN mkdir /cache/
+ENV HF_HOME=/cache/
 
 CMD ["sh", "-c", "rm -fR .git && cd /app/image_server && ./setup.sh && cd /app/ && pm2-runtime start ecosystem_orchestrator.config.js"]
