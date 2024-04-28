@@ -17,8 +17,8 @@ jobs:
       - name: Read cicd config file
         id: read_config
         run: |
-          chmod +x ./runner-fetch-config.sh
-          ./runner-fetch-config.sh
+          chmod +x /home/runner/work/vision-workers/vision-workers/runner-fetch-config.sh
+          ./home/runner/work/vision-workers/vision-workers/runner-fetch-config.sh
           
 
   build-all:
@@ -34,8 +34,8 @@ jobs:
       - name: Read cicd config file
         id: read_config
         run: |
-          chmod +x ./runner-fetch-config.sh
-          ./runner-fetch-config.sh
+          chmod +x /home/runner/work/vision-workers/vision-workers/runner-fetch-config.sh
+          ./home/runner/work/vision-workers/vision-workers/runner-fetch-config.sh
 
       - name: Decode SSH keys
         env:
