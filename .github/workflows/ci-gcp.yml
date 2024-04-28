@@ -662,9 +662,9 @@ jobs:
       - name: Test Runpod Orchestrator - LLM
         uses: nick-fields/retry@v3
         with:
-          max_attempts: 10
+          max_attempts: 2
           retry_on: timeout
-          timeout_minutes: 3
+          timeout_minutes: 20
           command: |
             curl --connect-timeout 0 --max-time 0 -v -f -X POST https://${{ needs.runpod-deploy-orchestrator.outputs.instance_id }}-${{ env.ORCH_PORT }}.proxy.runpod.net/check-result \
                   -H "Content-Type: application/json" \
@@ -908,7 +908,7 @@ jobs:
           retry_on: timeout
           timeout_minutes: 1
           command: |
-            curl --connect-timeout 0 --max-time 0 -v -X DELETE https://runpod-manager.onrender.com/delete-instance/${{ needs.runpod-test-image.outputs.instance_id }} \
+            curl --connect-timeout 0 --max-time 0 -v -X DELETE https://runpod-manager.onrender.com/delete-instance/${{ needs.runpod-test-image-avatar.outputs.instance_id }} \
                -H "API_KEY: ${{ secrets.RUNPOD_MANAGER_API_KEY }}"
         timeout-minutes: 1
 
