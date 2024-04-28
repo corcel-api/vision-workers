@@ -5,21 +5,6 @@ on:
   pull_request:
 
 jobs:
-  set-config:
-    runs-on: ubuntu-latest
-    outputs:
-      gcp-workflow: ${{ steps.read_config.outputs.gcp-workflow }}
-      runpod-workflow: ${{ steps.read_config.outputs.runpod-workflow }}
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
-
-      - name: Read cicd config file
-        id: read_config
-        run: |
-          chmod +x ./runner-fetch-config.sh
-          ./runner-fetch-config.sh
-
   build-all:
     runs-on: ubuntu-latest
     steps:
@@ -87,6 +72,8 @@ jobs:
           chmod +x ./runner-fetch-config.sh
           ./runner-fetch-config.sh
           echo "gcp-workflow=$GCP_ENABLED" >> $GITHUB_OUTPUT
+          echo "::set-output name=gcp-workflow::$GCP_ENABLED"
+
       
 
   deploy-runpod-jobs:
@@ -104,6 +91,7 @@ jobs:
           chmod +x ./runner-fetch-config.sh
           ./runner-fetch-config.sh
           echo "runpod-workflow=$RUNPOD_ENABLED" >> $GITHUB_OUTPUT
+          echo "::set-output name=runpod-workflow::$RUNPOD_ENABLED"
 
   gcp-deploy-orchestrator:
     if: needs.deploy-gcp-jobs.outputs.gcp-workflow == 'true'
