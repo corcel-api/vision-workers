@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - feature/*
 
 jobs:
   build:
@@ -139,12 +140,26 @@ jobs:
 
       - name: Wait for Orchestrator to be ready 
         run: |
-          gcloud compute ssh ${{ env.GCP_GPU_NAME }} --zone ${{ env.GCP_GPU_ZONE }} --command "\
-          until curl --connect-timeout 0 --max-time 0 localhost:${{ env.ORCH_PORT }}/docs; do \
-            echo 'Waiting for the Orchestrator to be ready...'; \
-            sleep 10; \
-          done; \
-          echo 'Orchestrator is ready!'"
+          echo "Waiting for the Orchestrator to become available..."
+          until curl --connect-timeout 0 --max-time 0 localhost:${{ env.ORCH_PORT }}/docs; do
+            echo 'Waiting for the Orchestrator to be ready...'
+            sleep 10
+          done
+          echo 'Orchestrator is ready!'
+
+          echo "Waiting for the Orchestrator to become unavailable..."
+          until ! curl --connect-timeout 0 --max-time 0 localhost:${{ env.ORCH_PORT }}/docs; do
+            echo 'Waiting for the Orchestrator to become unavailable...'
+            sleep 10
+          done
+          echo 'Orchestrator is now unavailable.'
+
+          echo "Waiting for the Orchestrator to become available again..."
+          until curl --connect-timeout 0 --max-time 0 localhost:${{ env.ORCH_PORT }}/docs; do
+            echo 'Waiting for the Orchestrator to be ready again...'
+            sleep 10
+          done
+          echo 'Orchestrator is ready again!'
         env:
           PORT_ORCH: ${{ env.ORCH_PORT }}
-        timeout-minutes: 15
+        timeout-minutes: 30
