@@ -93,7 +93,7 @@ jobs:
           BUILD_ID: ${{ github.run_id }}
           DOCKER_USER: ${{ secrets.DOCKER_USER }}
           DOCKER_PASSW: ${{ secrets.DOCKER_PASSW }}
-  
+          
   run-previous-orchestrator:
     needs: build-previous
     runs-on: ubuntu-latest
