@@ -5,11 +5,17 @@ on:
 
 jobs:
   build-previous:
-    name: Setup and Checkout
+    name: Build previous tag orchestrator docker image
     runs-on: ubuntu-latest
     outputs:
       previous_tag: ${{ steps.get_tags.outputs.previous_tag }}
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          tags: true
+          
       - name: Read cicd config file
         id: read_config
         run: |
@@ -41,12 +47,6 @@ jobs:
             sleep 10
           done
           echo 'Instance is ready!'
-
-      - name: Checkout code
-        uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
-          tags: true
 
       - name: List all tags
         id: list_tags
