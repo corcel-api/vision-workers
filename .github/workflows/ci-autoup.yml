@@ -4,7 +4,7 @@ on:
   push:
 
 jobs:
-  build-previous:
+  build:
     runs-on: ubuntu-latest
     outputs:
       previous_tag: ${{ steps.get_tags.outputs.previous_tag }}
@@ -95,7 +95,7 @@ jobs:
           DOCKER_PASSW: ${{ secrets.DOCKER_PASSW }}
   
   deploy-previous:
-    needs: build-previous
+    needs: build
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
