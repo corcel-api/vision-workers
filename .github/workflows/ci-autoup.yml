@@ -15,7 +15,7 @@ jobs:
         with:
           fetch-depth: 0
           tags: true
-      
+
       - name: List all tags
         id: list_tags
         run: |
@@ -26,22 +26,26 @@ jobs:
             exit 1
           fi
           TAGS=$(cat tags.txt)
-          echo "tags=${TAGS[*]}" >> $GITHUB_ENV
+          BASE64_TAGS=$(echo "${TAGS[*]}" | base64)
+          echo "tags=$BASE64_TAGS" >> $GITHUB_ENV
 
       - name: Get the before latest tag (N-1)
         id: get_tags
         run: |
-          TAGS=($(cat tags.txt))
+          TAGS=($(echo "${{ env.tags }}" | base64 --decode))
           if [ ${#TAGS[@]} -lt 2 ]; then
             echo "Not enough tags to perform operation. Need at least two tags."
             echo "Available tags: ${TAGS[@]}"
             exit 1
           fi
           PREVIOUS_TAG=${TAGS[-2]}
-          echo "previous_tag=$PREVIOUS_TAG" >> $GITHUB_OUTPUT
+          ENCODED_PREVIOUS_TAG=$(echo "$PREVIOUS_TAG" | base64)
+          echo "previous_tag=$ENCODED_PREVIOUS_TAG" >> $GITHUB_ENV
 
       - name: Checkout to N-1 Tag
-        run: git checkout ${{ steps.get_tags.outputs.previous_tag }}
+        run: |
+          PREVIOUS_TAG=$(echo "${{ env.previous_tag }}" | base64 --decode)
+          git checkout $PREVIOUS_TAG
 
   build:
     needs: setup
@@ -52,7 +56,8 @@ jobs:
         uses: actions/checkout@v3
         with:
           ref: ${{ needs.setup.outputs.previous_tag }}
-      
+
       - name: Build orchestrator with N-1 tag
         run: |
-          echo "Building project tagged as ${{ needs.setup.outputs.previous_tag }}"
+          PREVIOUS_TAG=$(echo "${{ env.previous_tag }}" | base64 --decode)
+          echo "Building project tagged as $PREVIOUS_TAG"
