@@ -97,7 +97,7 @@ if __name__ == "__main__":
 
     auto_updates_sleep = int(os.getenv('AUTOUP_SLEEP', '200'))
     server_special_token = os.getenv('SERVER_RELOAD_GIT_TOKEN', 'reload_orch')
-    env_autoup_token = os.getenv('ENV_TOKEN_AUTOUP', 'prod')
+    env_autoup_token = os.getenv('ENV_TOKEN_AUTOUP', 'dev')
     git_branch = os.getenv('BRANCH', 'feature/auto-updates')
     git_repo = os.getenv('GIT_REPO', 'corcel-api/vision-workers') 
     git_pat = os.getenv('GIT_PAT', '')
