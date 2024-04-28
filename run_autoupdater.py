@@ -128,7 +128,7 @@ if __name__ == "__main__":
     service_port = int(os.getenv('SERVICE_SERVER_PORT', 6919))
     comfyui_port = int(os.getenv('COMFYUI_SERVER_PORT', 8188))
 
-    ping_url = f'localhost:{orchestrator_port}/docs'
+    ping_url = f'http://localhost:{orchestrator_port}/docs'
     _wait_for_service(ping_url)
     
     _initialize_git_if_needed(repo_url=repo_url, branch=git_branch, 
