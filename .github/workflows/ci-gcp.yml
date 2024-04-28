@@ -135,7 +135,7 @@ jobs:
           PORT_ORCH: ${{ env.ORCH_PORT }}  
           LLM_PORT: ${{ env.LLM_PORT }}  
 
-      - name: Wait for Orchestrator to be ready
+      - name: Wait for Orchestrator to be ready 
         run: |
           gcloud compute ssh ${{ env.GCP_GPU_NAME }} --zone ${{ env.GCP_GPU_ZONE }} --command "\
           until curl --connect-timeout 0 --max-time 0 localhost:${{ env.ORCH_PORT }}/docs; do \
