@@ -99,6 +99,12 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
+      
+      - name: Read cicd config file
+        id: read_config
+        run: |
+          chmod +x ./runner-fetch-config.sh
+          ./runner-fetch-config.sh
 
       - name: Decode SSH keys
         run: |
@@ -142,6 +148,12 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
+      
+      - name: Read cicd config file
+        id: read_config
+        run: |
+          chmod +x ./runner-fetch-config.sh
+          ./runner-fetch-config.sh
 
       - name: Decode SSH keys
         run: |
@@ -185,6 +197,12 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
+      - name: Read cicd config file
+        id: read_config
+        run: |
+          chmod +x ./runner-fetch-config.sh
+          ./runner-fetch-config.sh
+
       - name: Decode SSH keys
         run: |
           mkdir /home/runner/.ssh
@@ -224,6 +242,15 @@ jobs:
     needs: gcp-test-orchestrator-avatar
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+      
+      - name: Read cicd config file
+        id: read_config
+        run: |
+          chmod +x ./runner-fetch-config.sh
+          ./runner-fetch-config.sh
+
       - name: Decode SSH keys
         run: |
           mkdir /home/runner/.ssh
@@ -252,6 +279,12 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
+
+      - name: Read cicd config file
+        id: read_config
+        run: |
+          chmod +x ./runner-fetch-config.sh
+          ./runner-fetch-config.sh
 
       - name: Decode SSH keys
         run: |
@@ -294,6 +327,12 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
+
+      - name: Read cicd config file
+        id: read_config
+        run: |
+          chmod +x ./runner-fetch-config.sh
+          ./runner-fetch-config.sh
 
       - name: Decode SSH keys
         run: |
@@ -351,6 +390,15 @@ jobs:
     needs: gcp-test-llm
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+      
+      - name: Read cicd config file
+        id: read_config
+        run: |
+          chmod +x ./runner-fetch-config.sh
+          ./runner-fetch-config.sh
+
       - name: Decode SSH keys
         run: |
           mkdir /home/runner/.ssh
@@ -379,6 +427,12 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
+
+      - name: Read cicd config file
+        id: read_config
+        run: |
+          chmod +x ./runner-fetch-config.sh
+          ./runner-fetch-config.sh
 
       - name: Decode SSH keys
         run: |
@@ -422,6 +476,12 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
+      - name: Read cicd config file
+        id: read_config
+        run: |
+          chmod +x ./runner-fetch-config.sh
+          ./runner-fetch-config.sh
+
       - name: Decode SSH keys
         run: |
           mkdir /home/runner/.ssh
@@ -464,6 +524,12 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
+      - name: Read cicd config file
+        id: read_config
+        run: |
+          chmod +x ./runner-fetch-config.sh
+          ./runner-fetch-config.sh
+
       - name: Decode SSH keys
         run: |
           mkdir /home/runner/.ssh
@@ -503,6 +569,15 @@ jobs:
     needs: gcp-test-image-avatar
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+      
+      - name: Read cicd config file
+        id: read_config
+        run: |
+          chmod +x ./runner-fetch-config.sh
+          ./runner-fetch-config.sh
+          
       - name: Decode SSH keys
         run: |
           mkdir /home/runner/.ssh
@@ -531,6 +606,15 @@ jobs:
     outputs:
       instance_id: ${{ steps.deploy-orch.outputs.instance_id }}
     steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+      
+      - name: Read cicd config file
+        id: read_config
+        run: |
+          chmod +x ./runner-fetch-config.sh
+          ./runner-fetch-config.sh
+
       - name: Deploy to Runpod
         id: deploy-orch
         run: |
@@ -562,6 +646,12 @@ jobs:
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v3
+      
+      - name: Read cicd config file
+        id: read_config
+        run: |
+          chmod +x ./runner-fetch-config.sh
+          ./runner-fetch-config.sh
 
       - name: Test Runpod Orchestrator - LLM
         uses: nick-fields/retry@v3
@@ -582,6 +672,12 @@ jobs:
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v3
+      
+      - name: Read cicd config file
+        id: read_config
+        run: |
+          chmod +x ./runner-fetch-config.sh
+          ./runner-fetch-config.sh
 
       - name: Test Runpod Orchestrator - Image
         uses: nick-fields/retry@v3
@@ -617,6 +713,15 @@ jobs:
     outputs:
       instance_id: ${{ steps.deploy-orch.outputs.instance_id }}
     steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+      
+      - name: Read cicd config file
+        id: read_config
+        run: |
+          chmod +x ./runner-fetch-config.sh
+          ./runner-fetch-config.sh
+
       - name: Deploy to Runpod
         id: deploy-orch
         run: |
@@ -649,6 +754,12 @@ jobs:
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v3
+
+      - name: Read cicd config file
+        id: read_config
+        run: |
+          chmod +x ./runner-fetch-config.sh
+          ./runner-fetch-config.sh
 
       - name: Load model
         timeout-minutes: 20
@@ -691,6 +802,15 @@ jobs:
     outputs:
       instance_id: ${{ steps.deploy-orch.outputs.instance_id }}
     steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+      
+      - name: Read cicd config file
+        id: read_config
+        run: |
+          chmod +x ./runner-fetch-config.sh
+          ./runner-fetch-config.sh
+          
       - name: Deploy to Runpod
         id: deploy-orch
         run: |
@@ -723,6 +843,12 @@ jobs:
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v3
+      
+      - name: Read cicd config file
+        id: read_config
+        run: |
+          chmod +x ./runner-fetch-config.sh
+          ./runner-fetch-config.sh
 
       - name: Test Runpod Image
         uses: nick-fields/retry@v3
@@ -743,6 +869,12 @@ jobs:
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v3
+      
+      - name: Read cicd config file
+        id: read_config
+        run: |
+          chmod +x ./runner-fetch-config.sh
+          ./runner-fetch-config.sh
 
       - name: Test Runpod Image
         uses: nick-fields/retry@v3
