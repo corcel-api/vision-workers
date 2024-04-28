@@ -93,10 +93,11 @@ jobs:
           BUILD_ID: ${{ github.run_id }}
           DOCKER_USER: ${{ secrets.DOCKER_USER }}
           DOCKER_PASSW: ${{ secrets.DOCKER_PASSW }}
-          
-  run-previous-orchestrator:
-    needs: build-previous
+
+  build-previous:
     runs-on: ubuntu-latest
+    outputs:
+      previous_tag: ${{ steps.get_tags.outputs.previous_tag }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
