@@ -8,7 +8,7 @@ from typing import List
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
-def _wait_for_service(url, timeout=300, interval=20):
+def _wait_for_service(url, timeout=300, interval=10):
     logging.info("Waiting for service to be up before any autoupdate action")
     start_time = time.time()
     while (time.time() - start_time) < timeout:
@@ -16,6 +16,7 @@ def _wait_for_service(url, timeout=300, interval=20):
             response = requests.get(url)
             if response.status_code == 200:
                 logging.info("Service is up!")
+                time.sleep(interval)
                 return True
         except requests.exceptions.RequestException as e:
             logging.error(f"Failed to connect, retrying in {interval} seconds...")
