@@ -25,11 +25,11 @@ jobs:
           TAGS=($(cat tags.txt))
           if [ ${#TAGS[@]} -lt 2 ]; then
             echo "Not enough tags to perform operation. Need at least two tags."
+            echo "Available tags: ${TAGS[@]}"
             exit 1
           fi
           PREVIOUS_TAG=${TAGS[-2]}
           echo "previous_tag=$PREVIOUS_TAG" >> $GITHUB_OUTPUT
-
 
       - name: Checkout to N-1 Tag
         run: git checkout ${{ steps.get_tags.outputs.previous_tag }}
