@@ -15,7 +15,7 @@ jobs:
         with:
           fetch-depth: 0
           tags: true
-          
+
       - name: Read cicd config file
         id: read_config
         run: |
@@ -86,10 +86,7 @@ jobs:
         run: gcloud compute scp --recurse /home/runner/work/vision-workers/vision-workers ${{ env.GCP_GPU_NAME }}:/home/runner/vision-workers --zone ${{ env.GCP_GPU_ZONE }}
       
       - name: Run script on remote server
-        run: gcloud compute ssh ${{ env.GCP_GPU_NAME }} --zone ${{ env.GCP_GPU_ZONE }} --command "export BUILD_ID=${{ github.run_id }};\
-                                                                                                  docker login --username=${{ secrets.DOCKER_USER }} --password=${{ secrets.DOCKER_PASSW }};\ 
-                                                                                                  cd /home/runner/vision-workers;
-                                                                                                  docker build -f Dockerfile.orchestrator -t corcelio/cicd:autoup-orchestrator-$BUILD_ID ."
+        run: gcloud compute ssh ${{ env.GCP_GPU_NAME }} --zone ${{ env.GCP_GPU_ZONE }} --command "export BUILD_ID=${{ github.run_id }}; docker login --username=${{ secrets.DOCKER_USER }} --password=${{ secrets.DOCKER_PASSW }}; cd /home/runner/vision-workers; docker build -f Dockerfile.orchestrator -t corcelio/cicd:autoup-orchestrator-$BUILD_ID ."
         env:
           BUILD_ID: ${{ github.run_id }}
           DOCKER_USER: ${{ secrets.DOCKER_USER }}
