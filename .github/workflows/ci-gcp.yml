@@ -1,6 +1,7 @@
 name: Build, deploy & test - GCP & Runpod
 
 on:
+  push:
   pull_request:
     branches:
       - main
@@ -76,6 +77,16 @@ jobs:
         id: set_config
         run: |
           echo "gcp-workflow=${{ env.GCP_ENABLED }}" >> $GITHUB_OUTPUT
+      
+      - name: Stop all running containers - preparing for deployment
+        run: |
+            gcloud compute ssh ${{ env.GCP_GPU_NAME }} --zone ${{ env.GCP_GPU_ZONE }} --command "\
+            CONTAINERS=\$(docker ps -q)
+            if [ -z \"\$CONTAINERS\" ]; then
+              echo 'No containers to stop.'
+            else
+              docker stop \$CONTAINERS || echo 'Failed to stop some containers, but continuing.'
+            fi"
 
   deploy-runpod-jobs:
     needs: build-all
