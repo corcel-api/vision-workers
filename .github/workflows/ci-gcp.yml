@@ -5,54 +5,7 @@ on:
   pull_request:
 
 jobs:
-  build-all:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-
-      - name: Decode SSH keys
-        env:
-          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
-          SSH_PUBLIC_KEY: ${{ secrets.SSH_PUBLIC_KEY }}
-        run: |
-          mkdir /home/runner/.ssh
-          echo "$SSH_PRIVATE_KEY" | base64 --decode > /home/runner/.ssh/google_compute_engine
-          echo "$SSH_PUBLIC_KEY" | base64 --decode > /home/runner/.ssh/google_compute_engine.pub
-          chmod 600 ~/.ssh/google_compute_engine
-          chmod 644 ~/.ssh/google_compute_engine.pub
-
-      - name: Set up Cloud SDK
-        uses: google-github-actions/setup-gcloud@v0.3.0
-        with:
-          project_id: ${{ secrets.GCP_PROJECT_ID }}
-          service_account_key: ${{ secrets.GCP_SA_KEY }}
-          export_default_credentials: true
-      
-      - name: Wait for Instance to be Ready
-        run: |
-          until gcloud compute ssh ${{ env.GCP_GPU_NAME }} --zone ${{ env.GCP_GPU_ZONE }} --command "echo 'Instance is up'"; do
-            echo 'Waiting for the instance to be ready...'
-            sleep 10
-          done
-          echo 'Instance is ready!'
-
-      - name: Clear remote directory
-        run: gcloud compute ssh ${{ env.GCP_GPU_NAME }} --zone ${{ env.GCP_GPU_ZONE }} --command "rm -rf /home/runner/*"
-
-      - name: Copy updated repository to remote server
-        run: gcloud compute scp --recurse /home/runner/work/vision-workers/vision-workers ${{ env.GCP_GPU_NAME }}:/home/runner/vision-workers --zone ${{ env.GCP_GPU_ZONE }}
-      
-      - name: Run script on remote server
-        run: gcloud compute ssh ${{ env.GCP_GPU_NAME }} --zone ${{ env.GCP_GPU_ZONE }} --command "export PROJECT_ID=${{ secrets.GCP_PROJECT_ID }}; export BUILD_ID=${{ github.run_id }}; docker login --username=${{ secrets.DOCKER_USER }} --password=${{ secrets.DOCKER_PASSW }}; cd /home/runner/vision-workers && chmod +x ./build-docker-ci-remote.sh && bash ./build-docker-ci-remote.sh"
-        env:
-          PROJECT_ID: ${{ secrets.PROJECT_ID }}
-          BUILD_ID: ${{ github.run_id }}
-          DOCKER_USER: ${{ secrets.DOCKER_USER }}
-          DOCKER_PASSW: ${{ secrets.DOCKER_PASSW }}
-
-  deploy-gcp-jobs:
-    needs: build-all
+  set-config:
     runs-on: ubuntu-latest
     outputs:
       runpod-workflow: ${{ steps.read_config.outputs.gcp-workflow }}
@@ -68,6 +21,14 @@ jobs:
       gcp-test-llm-query-model: ${{ steps.read_config.outputs.gcp-test-llm-query-model }}
       gcp-test-image-text2image: ${{ steps.read_config.outputs.gcp-test-image-text2image }}
       gcp-test-image-avatar: ${{ steps.read_config.outputs.gcp-test-image-avatar }}
+      runpod-workflow: ${{ steps.read_config.outputs.runpod-workflow }}
+      runpod-gpu-type: ${{ steps.read_config.outputs.runpod-gpu-type }}
+      runpod-test-orch-text2image: ${{ steps.read_config.outputs.runpod-test-orch-text2image }}
+      runpod-test-orch-llm: ${{ steps.read_config.outputs.runpod-test-orch-llm }}
+      runpod-test-llm-load-model: ${{ steps.read_config.outputs.runpod-test-llm-load-model }}
+      runpod-test-llm-query-model: ${{ steps.read_config.outputs.runpod-test-llm-query-model }}
+      runpod-test-image-text2image: ${{ steps.read_config.outputs.runpod-test-image-text2image }}
+      runpod-test-image-avatar: ${{ steps.read_config.outputs.runpod-test-image-avatar }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
@@ -128,26 +89,6 @@ jobs:
           echo "TEST_GCP_IMAGE_AVATAR=$TEST_GCP_IMAGE_AVATAR" >> $GITHUB_ENV
           echo "::set-output name=gcp-test-image-avatar::$TEST_GCP_IMAGE_AVATAR"
 
-  deploy-runpod-jobs:
-    needs: build-all
-    runs-on: ubuntu-latest
-    outputs:
-      runpod-workflow: ${{ steps.read_config.outputs.runpod-workflow }}
-      runpod-gpu-type: ${{ steps.read_config.outputs.runpod-gpu-type }}
-      runpod-test-orch-text2image: ${{ steps.read_config.outputs.runpod-test-orch-text2image }}
-      runpod-test-orch-llm: ${{ steps.read_config.outputs.runpod-test-orch-llm }}
-      runpod-test-llm-load-model: ${{ steps.read_config.outputs.runpod-test-llm-load-model }}
-      runpod-test-llm-query-model: ${{ steps.read_config.outputs.runpod-test-llm-query-model }}
-      runpod-test-image-text2image: ${{ steps.read_config.outputs.runpod-test-image-text2image }}
-      runpod-test-image-avatar: ${{ steps.read_config.outputs.runpod-test-image-avatar }}
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
-
-      - name: Read cicd config file
-        id: read_config
-        run: |
-          CONFIG_CONTENT=$(cat cicd_config.json)
           RUNPOD_ENABLED=$(echo $CONFIG_CONTENT | jq '.runpod-workflow')
           echo "RUNPOD_ENABLED=$RUNPOD_ENABLED" >> $GITHUB_ENV
           echo "::set-output name=runpod-workflow::$RUNPOD_ENABLED"
@@ -181,9 +122,73 @@ jobs:
           echo "::set-output name=runpod-test-image-avatar::$RUNPOD_TEST_IMAGE_AVATAR"
 
 
+  build-all:
+    needs: set-config
+    outputs: 
+      gcp-workflow: ${{ needs.set-config.outputs.gcp-workflow }}
+      runpod-workflow: ${{ needs.set-config.outputs.runpod-workflow }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Decode SSH keys
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          SSH_PUBLIC_KEY: ${{ secrets.SSH_PUBLIC_KEY }}
+        run: |
+          mkdir /home/runner/.ssh
+          echo "$SSH_PRIVATE_KEY" | base64 --decode > /home/runner/.ssh/google_compute_engine
+          echo "$SSH_PUBLIC_KEY" | base64 --decode > /home/runner/.ssh/google_compute_engine.pub
+          chmod 600 ~/.ssh/google_compute_engine
+          chmod 644 ~/.ssh/google_compute_engine.pub
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v0.3.0
+        with:
+          project_id: ${{ secrets.GCP_PROJECT_ID }}
+          service_account_key: ${{ secrets.GCP_SA_KEY }}
+          export_default_credentials: true
+      
+      - name: Wait for Instance to be Ready
+        run: |
+          until gcloud compute ssh ${{ env.GCP_GPU_NAME }} --zone ${{ env.GCP_GPU_ZONE }} --command "echo 'Instance is up'"; do
+            echo 'Waiting for the instance to be ready...'
+            sleep 10
+          done
+          echo 'Instance is ready!'
+
+      - name: Clear remote directory
+        run: gcloud compute ssh ${{ env.GCP_GPU_NAME }} --zone ${{ env.GCP_GPU_ZONE }} --command "rm -rf /home/runner/*"
+
+      - name: Copy updated repository to remote server
+        run: gcloud compute scp --recurse /home/runner/work/vision-workers/vision-workers ${{ env.GCP_GPU_NAME }}:/home/runner/vision-workers --zone ${{ env.GCP_GPU_ZONE }}
+      
+      - name: Run script on remote server
+        run: gcloud compute ssh ${{ env.GCP_GPU_NAME }} --zone ${{ env.GCP_GPU_ZONE }} --command "export PROJECT_ID=${{ secrets.GCP_PROJECT_ID }}; export BUILD_ID=${{ github.run_id }}; docker login --username=${{ secrets.DOCKER_USER }} --password=${{ secrets.DOCKER_PASSW }}; cd /home/runner/vision-workers && chmod +x ./build-docker-ci-remote.sh && bash ./build-docker-ci-remote.sh"
+        env:
+          PROJECT_ID: ${{ secrets.PROJECT_ID }}
+          BUILD_ID: ${{ github.run_id }}
+          DOCKER_USER: ${{ secrets.DOCKER_USER }}
+          DOCKER_PASSW: ${{ secrets.DOCKER_PASSW }}
+
+  deploy-gcp-jobs:  
+    if: needs.build-all.outputs.gcp-workflow == 'true'
+    needs: build-all
+    runs-on: ubuntu-latest
+    steps:
+      - name: Placeholder Step
+        run: echo "This is a placeholder step"
+
+  deploy-runpod-jobs:
+    if: needs.build-all.outputs.runpod-workflow == 'true'
+    needs: build-all
+    runs-on: ubuntu-latest
+    steps:
+      - name: Placeholder Step
+        run: echo "This is a placeholder step"
 
   gcp-deploy-orchestrator:
-    if: needs.deploy-gcp-jobs.outputs.gcp-workflow == 'true'
     needs: deploy-gcp-jobs
     runs-on: ubuntu-latest
     steps:
@@ -616,7 +621,6 @@ jobs:
           gcloud compute ssh ${{ env.GCP_GPU_NAME }} --zone ${{ env.GCP_GPU_ZONE }} --command "docker stop \$(docker ps -q)"
   
   runpod-deploy-orchestrator:
-    if: needs.deploy-runpod-jobs.outputs.runpod-workflow == 'true'
     needs: deploy-runpod-jobs
     runs-on: ubuntu-latest
     outputs:
@@ -703,7 +707,6 @@ jobs:
         timeout-minutes: 1
 
   runpod-deploy-llm-server:
-    if: needs.deploy-runpod-jobs.outputs.runpod-workflow == 'true'
     needs: deploy-runpod-jobs
     runs-on: ubuntu-latest
     outputs:
@@ -778,7 +781,6 @@ jobs:
         timeout-minutes: 1
 
   runpod-deploy-image-server:
-    if: needs.deploy-runpod-jobs.outputs.runpod-workflow == 'true'
     needs: deploy-runpod-jobs
     runs-on: ubuntu-latest
     outputs:
