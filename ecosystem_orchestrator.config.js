@@ -1,13 +1,6 @@
 module.exports = {
     apps: [
       {
-        name: "download_models",
-        script: "./setup.sh",
-        cwd: "/app/image_server",
-        watch: false,
-        autorestart: false
-      },
-      {
         name: "entrypoint",
         script: "./entrypoint.sh",
         cwd: "/app/validator_orchestrator",
