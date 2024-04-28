@@ -19,15 +19,14 @@ jobs:
       - name: List all tags
         id: list_tags
         run: |
-          git --version
-          git config user.name "GitHub Actions Bot"
-          git config user.email "<>"
-          git status
-          git tag
           git tag > tags.txt
-          echo "tags : "
           cat tags.txt
-          echo "tags=$(cat tags.txt)" >> $GITHUB_ENV
+          if [ ! -s tags.txt ]; then
+            echo "No tags found in the repository."
+            exit 1
+          fi
+          TAGS=$(cat tags.txt)
+          echo "tags=${TAGS[*]}" >> $GITHUB_ENV
 
       - name: Get the before latest tag (N-1)
         id: get_tags
