@@ -9,26 +9,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       gcp-workflow: ${{ steps.read_config.outputs.gcp-workflow }}
-      gcp-gpu-name: ${{ steps.read_config.outputs.gcp-gpu-name }}
-      gcp-gpu-zone: ${{ steps.read_config.outputs.gcp-gpu-zone }}
-      orchestrator-port: ${{ steps.read_config.outputs.orchestrator-port }}
-      llm-server-port: ${{ steps.read_config.outputs.llm-server-port }}
-      image-server-port: ${{ steps.read_config.outputs.image-server-port }}
-      test-json-folder: ${{ steps.read_config.outputs.test-json-folder }}
-      gcp-test-orch-text2image: ${{ steps.read_config.outputs.gcp-test-orch-text2image }}
-      gcp-test-orch-avatar: ${{ steps.read_config.outputs.gcp-test-orch-avatar }}
-      gcp-test-llm-load-model: ${{ steps.read_config.outputs.gcp-test-llm-load-model }}
-      gcp-test-llm-query-model: ${{ steps.read_config.outputs.gcp-test-llm-query-model }}
-      gcp-test-image-text2image: ${{ steps.read_config.outputs.gcp-test-image-text2image }}
-      gcp-test-image-avatar: ${{ steps.read_config.outputs.gcp-test-image-avatar }}
       runpod-workflow: ${{ steps.read_config.outputs.runpod-workflow }}
-      runpod-gpu-type: ${{ steps.read_config.outputs.runpod-gpu-type }}
-      runpod-test-orch-text2image: ${{ steps.read_config.outputs.runpod-test-orch-text2image }}
-      runpod-test-orch-llm: ${{ steps.read_config.outputs.runpod-test-orch-llm }}
-      runpod-test-llm-load-model: ${{ steps.read_config.outputs.runpod-test-llm-load-model }}
-      runpod-test-llm-query-model: ${{ steps.read_config.outputs.runpod-test-llm-query-model }}
-      runpod-test-image-text2image: ${{ steps.read_config.outputs.runpod-test-image-text2image }}
-      runpod-test-image-avatar: ${{ steps.read_config.outputs.runpod-test-image-avatar }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
@@ -36,93 +17,9 @@ jobs:
       - name: Read cicd config file
         id: read_config
         run: |
-          CONFIG_CONTENT=$(cat cicd_config.json)
-
-          GCP_ENABLED=$(echo "$CONFIG_CONTENT" | jq -r '."gcp-workflow"')
-          echo "GCP_ENABLED=$GCP_ENABLED" >> $GITHUB_ENV
-          echo "::set-output name=gcp-workflow::$GCP_ENABLED"
-
-          GCP_GPU_NAME=$(echo "$CONFIG_CONTENT" | jq -r '."gcp-gpu-name"')
-          echo "GCP_GPU_NAME=$GCP_GPU_NAME" >> $GITHUB_ENV
-          echo "::set-output name=gcp-gpu-name::$GCP_GPU_NAME"
-
-          GCP_GPU_ZONE=$(echo "$CONFIG_CONTENT" | jq -r '."gcp-gpu-zone"')
-          echo "GCP_GPU_ZONE=$GCP_GPU_ZONE" >> $GITHUB_ENV
-          echo "::set-output name=gcp-gpu-zone::$GCP_GPU_ZONE"
-
-          ORCH_PORT=$(echo "$CONFIG_CONTENT" | jq -r '."orchestrator-port"')
-          echo "ORCH_PORT=$ORCH_PORT" >> $GITHUB_ENV
-          echo "::set-output name=orchestrator-port::$ORCH_PORT"
-
-          LLM_PORT=$(echo "$CONFIG_CONTENT" | jq -r '."llm-server-port"')
-          echo "LLM_PORT=$LLM_PORT" >> $GITHUB_ENV
-          echo "::set-output name=llm-server-port::$LLM_PORT"
-
-          IMAGE_PORT=$(echo "$CONFIG_CONTENT" | jq -r '."image-server-port"')
-          echo "IMAGE_PORT=$IMAGE_PORT" >> $GITHUB_ENV
-          echo "::set-output name=image-server-port::$IMAGE_PORT"
-
-          TEST_JSON_FOLDER=$(echo "$CONFIG_CONTENT" | jq -r '."test-json-folder"')
-          echo "TEST_JSON_FOLDER=$TEST_JSON_FOLDER" >> $GITHUB_ENV
-          echo "::set-output name=test-json-folder::$TEST_JSON_FOLDER"
-
-          TEST_GCP_ORCH_TXT2IMG=$(echo "$CONFIG_CONTENT" | jq -r '."gcp-test-orch-text2image"')
-          echo "TEST_GCP_ORCH_TXT2IMG=$TEST_GCP_ORCH_TXT2IMG" >> $GITHUB_ENV
-          echo "::set-output name=gcp-test-orch-text2image::$TEST_GCP_ORCH_TXT2IMG"
-
-          TEST_GCP_ORCH_AVATAR=$(echo "$CONFIG_CONTENT" | jq -r '."gcp-test-orch-avatar"')
-          echo "TEST_GCP_ORCH_AVATAR=$TEST_GCP_ORCH_AVATAR" >> $GITHUB_ENV
-          echo "::set-output name=gcp-test-orch-avatar::$TEST_GCP_ORCH_AVATAR"
-
-          TEST_GCP_LLM_LOAD=$(echo "$CONFIG_CONTENT" | jq -r '."gcp-test-llm-load-model"')
-          echo "TEST_GCP_LLM_LOAD=$TEST_GCP_LLM_LOAD" >> $GITHUB_ENV
-          echo "::set-output name=gcp-test-llm-load-model::$TEST_GCP_LLM_LOAD"
-
-          TEST_GCP_LLM_QUERY=$(echo "$CONFIG_CONTENT" | jq -r '."gcp-test-llm-query-model"')
-          echo "TEST_GCP_LLM_QUERY=$TEST_GCP_LLM_QUERY" >> $GITHUB_ENV
-          echo "::set-output name=gcp-test-llm-query-model::$TEST_GCP_LLM_QUERY"
-
-          TEST_GCP_IMAGE_TXT2IMG=$(echo "$CONFIG_CONTENT" | jq -r '."gcp-test-image-text2image"')
-          echo "TEST_GCP_IMAGE_TXT2IMG=$TEST_GCP_IMAGE_TXT2IMG" >> $GITHUB_ENV
-          echo "::set-output name=gcp-test-image-text2image::$TEST_GCP_IMAGE_TXT2IMG"
-
-          TEST_GCP_IMAGE_AVATAR=$(echo "$CONFIG_CONTENT" | jq -r '."gcp-test-image-avatar"')
-          echo "TEST_GCP_IMAGE_AVATAR=$TEST_GCP_IMAGE_AVATAR" >> $GITHUB_ENV
-          echo "::set-output name=gcp-test-image-avatar::$TEST_GCP_IMAGE_AVATAR"
-
-          RUNPOD_ENABLED=$(echo "$CONFIG_CONTENT" | jq -r '."runpod-workflow"')
-          echo "RUNPOD_ENABLED=$RUNPOD_ENABLED" >> $GITHUB_ENV
-          echo "::set-output name=runpod-workflow::$RUNPOD_ENABLED"
-
-          RUNPOD_GPU_TYPE=$(echo "$CONFIG_CONTENT" | jq -r '."runpod-gpu-type"')
-          echo "RUNPOD_GPU_TYPE=$RUNPOD_GPU_TYPE" >> $GITHUB_ENV
-          echo "::set-output name=runpod-gpu-type::$RUNPOD_GPU_TYPE"
-
-          RUNPOD_TEST_ORCH_TXT2IMG=$(echo "$CONFIG_CONTENT" | jq -r '."runpod-test-orch-text2image"')
-          echo "RUNPOD_TEST_ORCH_TXT2IMG=$RUNPOD_TEST_ORCH_TXT2IMG" >> $GITHUB_ENV
-          echo "::set-output name=runpod-test-orch-text2image::$RUNPOD_TEST_ORCH_TXT2IMG"
-
-          RUNPOD_TEST_ORCH_LLM=$(echo "$CONFIG_CONTENT" | jq -r '."runpod-test-orch-llm"')
-          echo "RUNPOD_TEST_ORCH_LLM=$RUNPOD_TEST_ORCH_LLM" >> $GITHUB_ENV
-          echo "::set-output name=runpod-test-orch-llm::$RUNPOD_TEST_ORCH_LLM"
-
-          RUNPOD_TEST_LLM_LOAD=$(echo "$CONFIG_CONTENT" | jq -r '."runpod-test-llm-load-model"')
-          echo "RUNPOD_TEST_LLM_LOAD=$RUNPOD_TEST_LLM_LOAD" >> $GITHUB_ENV
-          echo "::set-output name=runpod-test-llm-load-model::$RUNPOD_TEST_LLM_LOAD"
-
-          RUNPOD_TEST_LLM_QUERY=$(echo "$CONFIG_CONTENT" | jq -r '."runpod-test-llm-query-model"')
-          echo "RUNPOD_TEST_LLM_QUERY=$RUNPOD_TEST_LLM_QUERY" >> $GITHUB_ENV
-          echo "::set-output name=runpod-test-llm-query-model::$RUNPOD_TEST_LLM_QUERY"
-
-          RUNPOD_TEST_IMAGE_TXT2IMG=$(echo "$CONFIG_CONTENT" | jq -r '."runpod-test-image-text2image"')
-          echo "RUNPOD_TEST_IMAGE_TXT2IMG=$RUNPOD_TEST_IMAGE_TXT2IMG" >> $GITHUB_ENV
-          echo "::set-output name=runpod-test-image-text2image::$RUNPOD_TEST_IMAGE_TXT2IMG"
-
-          RUNPOD_TEST_IMAGE_AVATAR=$(echo "$CONFIG_CONTENT" | jq -r '."runpod-test-image-avatar"')
-          echo "RUNPOD_TEST_IMAGE_AVATAR=$RUNPOD_TEST_IMAGE_AVATAR" >> $GITHUB_ENV
-          echo "::set-output name=runpod-test-image-avatar::$RUNPOD_TEST_IMAGE_AVATAR"
-
-
+          chmod +x ./runner-fetch-config.sh
+          ./runner-fetch-config.sh
+          
 
   build-all:
     needs: set-config
@@ -133,6 +30,12 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
+      
+      - name: Read cicd config file
+        id: read_config
+        run: |
+          chmod +x ./runner-fetch-config.sh
+          ./runner-fetch-config.sh
 
       - name: Decode SSH keys
         env:
