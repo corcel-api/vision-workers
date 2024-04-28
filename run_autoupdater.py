@@ -95,9 +95,9 @@ if __name__ == "__main__":
     parser.add_argument("--restart_script", type=str)
     args = parser.parse_args()
 
-    auto_updates_sleep = int(os.getenv('AUTOUP_SLEEP', '60'))
+    auto_updates_sleep = int(os.getenv('AUTOUP_SLEEP', '200'))
     server_special_token = os.getenv('SERVER_RELOAD_GIT_TOKEN', 'reload_orch')
-    env_autoup_token = os.getenv('ENV_TOKEN_AUTOUP', '_prod')
+    env_autoup_token = os.getenv('ENV_TOKEN_AUTOUP', 'prod')
     git_branch = os.getenv('BRANCH', 'feature/auto-updates')
     git_repo = os.getenv('GIT_REPO', 'corcel-api/vision-workers') 
     git_pat = os.getenv('GIT_PAT', '')
