@@ -68,7 +68,7 @@ def _print_changes_since_last_tag(local_tag: str, remote_tag: str) -> None:
     else:
         logging.info("No changes were found, or the tags are identical.\n")
 
-def run_autoupdate(restart_script: str, env_autoup_token: str, server_special_token: str, branch: str, ports_to_kill: List[int], auto_updates_sleep: int) -> None:
+def run_autoupdate(restart_script: str, env_autoup_token: str, branch: str, ports_to_kill: List[int], auto_updates_sleep: int) -> None:
     while True:
         _fetch_latest_tags(branch)
         local_tag = _get_latest_tag()
@@ -78,14 +78,11 @@ def run_autoupdate(restart_script: str, env_autoup_token: str, server_special_to
             logging.info("Local repository is not up-to-date. Updating...")
             _update_repository(remote_tag)
             _print_changes_since_last_tag(local_tag, remote_tag)
-            if _contains_special_token(remote_tag, server_special_token):
-                logging.info("Remote tag contains required token. Running the autoupdate steps...")
-                _stop_server_on_port(ports_to_kill)
-                subprocess.run(f"chmod +x {restart_script}", shell=True)
-                subprocess.Popen(f"/bin/sh {restart_script}", shell=True)
-                logging.info("Finished running the autoupdate steps! Server is ready.")
-            else:
-                logging.info("No restart needed as server token not present.")
+            logging.info("Remote tag contains required token. Running the autoupdate steps...")
+            _stop_server_on_port(ports_to_kill)
+            subprocess.run(f"chmod +x {restart_script}", shell=True)
+            subprocess.Popen(f"/bin/sh {restart_script}", shell=True)
+            logging.info("Finished running the autoupdate steps! Server is ready.")
         else:
             logging.info("Local repository is up-to-date or the tag does not contain the required token.")
         time.sleep(auto_updates_sleep)
@@ -96,7 +93,6 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     auto_updates_sleep = int(os.getenv('AUTOUP_SLEEP', '200'))
-    server_special_token = os.getenv('SERVER_RELOAD_GIT_TOKEN', 'reload_orch')
     env_autoup_token = os.getenv('ENV_TOKEN_AUTOUP', 'dev')
     git_branch = os.getenv('BRANCH', 'feature/auto-updates')
     git_repo = os.getenv('GIT_REPO', 'corcel-api/vision-workers') 
@@ -114,12 +110,11 @@ if __name__ == "__main__":
     time.sleep(auto_updates_sleep)
     _initialize_git_if_needed(repo_url=repo_url, branch=git_branch)
 
-    logging.info(f"Listening for Git tag updates with tags containing the token: {env_autoup_token}, and only reloading if the token {server_special_token} is specified")
+    logging.info(f"Listening for Git tag updates with tags containing the token: {env_autoup_token}")
 
     run_autoupdate(
         restart_script=args.restart_script,
         env_autoup_token=env_autoup_token,
-        server_special_token=server_special_token,
         branch=git_branch,
         ports_to_kill=[orchestrator_port, service_port, comfyui_port],
         auto_updates_sleep=auto_updates_sleep
