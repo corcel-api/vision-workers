@@ -1,8 +1,9 @@
 name: Build, deploy & test - GCP & Runpod
 
 on:
-  push:
   pull_request:
+    branches:
+      - main
 
 jobs:
   build-all:
@@ -662,9 +663,9 @@ jobs:
       - name: Test Runpod Orchestrator - LLM
         uses: nick-fields/retry@v3
         with:
-          max_attempts: 2
+          max_attempts: 15
           retry_on: timeout
-          timeout_minutes: 20
+          timeout_minutes: 3
           command: |
             curl --connect-timeout 0 --max-time 0 -v -f -X POST https://${{ needs.runpod-deploy-orchestrator.outputs.instance_id }}-${{ env.ORCH_PORT }}.proxy.runpod.net/check-result \
                   -H "Content-Type: application/json" \
