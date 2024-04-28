@@ -5,7 +5,7 @@ module.exports = {
         script: "./entrypoint.sh",
         cwd: "/app/validator_orchestrator",
         watch: false,
-        autorestart: false
+        autorestart: true
       },
       {
         name: "autoupdater",
