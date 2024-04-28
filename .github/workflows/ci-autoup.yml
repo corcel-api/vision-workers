@@ -16,6 +16,12 @@ jobs:
       - name: List all tags
         id: list_tags
         run: |
+          git --version
+          git config user.name "GitHub Actions Bot"
+          git config user.email "<>"
+          git status
+          git tag
+          git describe
           git tag > tags.txt
           echo "tags : "
           cat tags.txt
