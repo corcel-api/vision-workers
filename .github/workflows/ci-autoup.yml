@@ -51,13 +51,18 @@ jobs:
     needs: setup
     name: Build Job
     runs-on: ubuntu-latest
+    outputs:
+      previous_tag: ${{ steps.setup.outputs.previous_tag }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
         with:
-          ref: ${{ needs.setup.outputs.previous_tag }}
-
-      - name: Build orchestrator with N-1 tag
+          fetch-depth: 0
+          tags: true
+      - name: Recover N-1 tag
         run: |
-          PREVIOUS_TAG=$(echo "${{ env.previous_tag }}" | base64 --decode)
+          PREVIOUS_TAG=$(echo "${{ needs.setup.outputs.previous_tag }}" | base64 --decode)
           echo "Building project tagged as $PREVIOUS_TAG"
+          git checkout $PREVIOUS_TAG
+
+      
