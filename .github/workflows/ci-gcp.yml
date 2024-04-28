@@ -72,9 +72,8 @@ jobs:
           chmod +x ./runner-fetch-config.sh
           ./runner-fetch-config.sh
           echo "gcp-workflow=$GCP_ENABLED" >> $GITHUB_OUTPUT
+          echo $GCP_ENABLED
           echo "::set-output name=gcp-workflow::$GCP_ENABLED"
-
-      
 
   deploy-runpod-jobs:
     needs: build-all
@@ -91,6 +90,7 @@ jobs:
           chmod +x ./runner-fetch-config.sh
           ./runner-fetch-config.sh
           echo "runpod-workflow=$RUNPOD_ENABLED" >> $GITHUB_OUTPUT
+          echo $RUNPOD_ENABLED
           echo "::set-output name=runpod-workflow::$RUNPOD_ENABLED"
 
   gcp-deploy-orchestrator:
