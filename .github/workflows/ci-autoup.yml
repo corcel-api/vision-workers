@@ -5,7 +5,6 @@ on:
 
 jobs:
   build-previous:
-    name: Build previous tag orchestrator docker image
     runs-on: ubuntu-latest
     outputs:
       previous_tag: ${{ steps.get_tags.outputs.previous_tag }}
@@ -95,8 +94,7 @@ jobs:
           DOCKER_USER: ${{ secrets.DOCKER_USER }}
           DOCKER_PASSW: ${{ secrets.DOCKER_PASSW }}
   
-  run-orchestrator:
-    name: run-previous-orchestrator
+  run-previous-orchestrator:
     needs: build-previous
     runs-on: ubuntu-latest
     steps:
