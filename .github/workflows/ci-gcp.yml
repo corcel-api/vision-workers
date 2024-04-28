@@ -61,7 +61,7 @@ jobs:
     needs: build-all
     runs-on: ubuntu-latest
     outputs:
-      gcpWorkflow: ${{ steps.read_config.outputs.gcpWorkflow }}
+      gcpWorkflow: ${{ steps.read_config.outputs.gcp-workflow }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -71,9 +71,7 @@ jobs:
         run: |
           chmod +x ./runner-fetch-config.sh
           ./runner-fetch-config.sh
-          echo "gcpWorkflow=$GCP_ENABLED" >> $GITHUB_OUTPUT
-          echo $GCP_ENABLED
-          echo "::set-output name=gcpWorkflow::$GCP_ENABLED"
+          echo "gcp-workflow=${{ env.GCP_ENABLED }}" >> $GITHUB_OUTPUT
 
   deploy-runpod-jobs:
     needs: build-all
@@ -89,12 +87,10 @@ jobs:
         run: |
           chmod +x ./runner-fetch-config.sh
           ./runner-fetch-config.sh
-          echo "runpod-workflow=$RUNPOD_ENABLED" >> $GITHUB_OUTPUT
-          echo $RUNPOD_ENABLED
-          echo "::set-output name=runpod-workflow::$RUNPOD_ENABLED"
+          echo "runpod-workflow=${{ env.RUNPOD_ENABLED }}" >> $GITHUB_OUTPUT
 
   gcp-deploy-orchestrator:
-    if: needs.deploy-gcp-jobs.outputs.gcpWorkflow == 'true'
+    if: needs.deploy-gcp-jobs.outputs.gcp-workflow == 'true'
     needs: deploy-gcp-jobs
     runs-on: ubuntu-latest
     steps:
