@@ -25,29 +25,33 @@ def _wait_for_service(url, timeout=300, interval=10):
     return False
 
 
-def _initialize_git_if_needed(repo_url: str, branch: str, ports_to_kill: list, restart_script: str) -> None:
+def _initialize_git_if_needed(repo_url: str, ports_to_kill: list, restart_script: str, restart_on_init: bool) -> None:
     if not os.path.isdir('.git'):
         logging.info("No .git directory found. Initializing and setting up remote repository...")
         subprocess.run(["git", "init"], check=True)
         subprocess.run(["git", "remote", "add", "origin", repo_url], check=True)
-        subprocess.run(["git", "fetch"], check=True)
-        subprocess.run(["git", "reset", "--hard"], check=True)
+        subprocess.run(["git", "fetch", "--tags"], check=True)
+        # Find the latest tag
+        latest_tag = subprocess.check_output(["git", "describe", "--tags", "$(git rev-list --tags --max-count=1)"], text=True).strip()
+        # Reset to the latest tag
+        subprocess.run(["git", "reset", "--hard", latest_tag], check=True)
         subprocess.run(["git", "clean", "-fd"], check=True)
-        subprocess.run(["git", "checkout", branch], check=True)
-        logging.info("Finished running the autoupdate steps! Server is ready.")
+        if restart_on_init:
+            _stop_server_on_port(ports_to_kill)
+            subprocess.run(f"chmod +x {restart_script}", shell=True)
+            subprocess.Popen(f"/bin/sh {restart_script}", shell=True)
+        logging.info("Finished running the autoupdate steps! Server is ready with the latest tag.")
     else:
         logging.info(".git directory already exists.")
+
 
 def _get_latest_tag() -> str:
     return subprocess.getoutput("git describe --tags --abbrev=0")
 
-def _get_latest_remote_tag(branch: str) -> str:
-    subprocess.run(["git", "fetch", "--tags", "origin", branch], check=True)
-    latest_commit = subprocess.getoutput(f"git rev-list --tags --max-count=1 --branches=origin/{branch}")
+def _get_latest_remote_tag() -> str:
+    subprocess.run(["git", "fetch", "--tags"], check=True)
+    latest_commit = subprocess.getoutput(f"git rev-list --tags --max-count=1")
     return subprocess.getoutput(f"git describe --tags --abbrev=0 {latest_commit}")
-
-def _fetch_latest_tags(branch: str) -> None:
-    subprocess.run(["git", "fetch", "--tags", "origin", branch], check=True)
 
 def _should_update(local_tag: str, remote_tag: str) -> bool:
     logging.info(f"Comparing local tag: {local_tag} to remote tag: {remote_tag}")
@@ -87,11 +91,10 @@ def _print_changes_since_last_tag(local_tag: str, remote_tag: str) -> None:
     else:
         logging.info("No changes were found, or the tags are identical.\n")
 
-def run_autoupdate(restart_script: str, env_autoup_token: str, branch: str, ports_to_kill: List[int], auto_updates_sleep: int) -> None:
+def run_autoupdate(restart_script: str, env_autoup_token: str, ports_to_kill: List[int], auto_updates_sleep: int) -> None:
     while True:
-        _fetch_latest_tags(branch)
         local_tag = _get_latest_tag()
-        remote_tag = _get_latest_remote_tag(branch)
+        remote_tag = _get_latest_remote_tag()
 
         if _should_update(local_tag, remote_tag) and _contains_special_token(remote_tag, env_autoup_token):
             logging.info("Local repository is not up-to-date. Updating...")
@@ -112,8 +115,8 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     auto_updates_sleep = int(os.getenv('AUTOUP_SLEEP', '200'))
-    env_autoup_token = os.getenv('ENV_TOKEN_AUTOUP', 'dev')
-    git_branch = os.getenv('BRANCH', 'feature/auto-updates')
+    env_autoup_token = os.getenv('ENV_TOKEN_AUTOUP', 'prod')
+    restart_on_init = True if os.getenv('RESTART_ON_INIT', 'false').lower() == 'true' else False
     git_repo = os.getenv('GIT_REPO', 'corcel-api/vision-workers') 
     git_pat = os.getenv('GIT_PAT', '')
     if git_pat != '':
@@ -129,15 +132,15 @@ if __name__ == "__main__":
     ping_url = f'http://localhost:{orchestrator_port}/docs'
     _wait_for_service(ping_url)
     
-    _initialize_git_if_needed(repo_url=repo_url, branch=git_branch, 
-                              ports_to_kill=[orchestrator_port], restart_script=args.restart_script)
+    _initialize_git_if_needed(repo_url=repo_url, ports_to_kill=[orchestrator_port], 
+                              restart_script=args.restart_script,
+                              restart_on_init=restart_on_init)
 
     logging.info(f"Listening for Git tag updates with tags containing the token: {env_autoup_token}")
 
     run_autoupdate(
         restart_script=args.restart_script,
         env_autoup_token=env_autoup_token,
-        branch=git_branch,
         ports_to_kill=[orchestrator_port, service_port, comfyui_port],
         auto_updates_sleep=auto_updates_sleep
     )
