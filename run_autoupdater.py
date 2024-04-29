@@ -34,8 +34,6 @@ def _initialize_git_if_needed(repo_url: str, branch: str, ports_to_kill: list, r
         subprocess.run(["git", "reset", "--hard"], check=True)
         subprocess.run(["git", "clean", "-fd"], check=True)
         subprocess.run(["git", "checkout", branch], check=True)
-        subprocess.run(f"chmod +x {restart_script}", shell=True)
-        subprocess.Popen(f"/bin/sh {restart_script}", shell=True)
         logging.info("Finished running the autoupdate steps! Server is ready.")
     else:
         logging.info(".git directory already exists.")
