@@ -57,6 +57,7 @@ RUN pip install huggingface_hub[hf_transfer]
 RUN rm -rf /root/.cache/pip/* 
 
 COPY image_server /app/image_server
+RUN chmod +x /app/image_server/onnx_setup.sh && /app/image_server/onnx_setup.sh
 
 ENV APP_HOST=0.0.0.0
 ENV APP_PORT=8080
