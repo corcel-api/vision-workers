@@ -6,7 +6,7 @@ import constants as cst
 
 class EngineEnum(str, Enum):
     DREAMSHAPER = "dreamshaper"
-    PROTEUS = "proteus"
+    OPENVISION = "openvision"
     PLAYGROUND = "playground"
 
 
@@ -21,7 +21,7 @@ class Txt2ImgBase(BaseModel):
         lt=50,
     )
     engine: EngineEnum = Field(
-        EngineEnum.PROTEUS.value, description="The engine to use for image generation"
+        EngineEnum.OPENVISION.value, description="The engine to use for image generation"
     )
     cfg_scale: float = Field(
         cst.DEFAULT_CFG, description="Guidance scale", gt=1.5, lt=12
@@ -49,7 +49,7 @@ class Img2ImgBase(BaseModel):
     )
     init_image: str
     engine: EngineEnum = Field(
-        EngineEnum.PROTEUS.value, description="The engine to use for image generation"
+        EngineEnum.OPENVISION.value, description="The engine to use for image generation"
     )
     image_strength: float = Field(
         cst.DEFAULT_IMAGE_STRENGTH,

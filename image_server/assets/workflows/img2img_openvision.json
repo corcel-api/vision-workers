@@ -1,9 +1,9 @@
 {
   "Prompt": {
     "inputs": {
-      "text": "a penguin in london, high quality, hd",
+      "text": "a shark in a bowl",
       "clip": [
-        "93",
+        "95",
         1
       ]
     },
@@ -51,14 +51,14 @@
   },
   "Sampler": {
     "inputs": {
-      "seed": 788125745393608,
+      "seed": 413249764546273,
       "steps": 8,
       "cfg": 2,
       "sampler_name": "euler_ancestral",
       "scheduler": "normal",
-      "denoise": 1,
+      "denoise": 0.7,
       "model": [
-        "93",
+        "95",
         0
       ],
       "positive": [
@@ -70,7 +70,7 @@
         0
       ],
       "latent_image": [
-        "Latent",
+        "94",
         0
       ]
     },
@@ -81,7 +81,33 @@
   },
   "93": {
     "inputs": {
-      "ckpt_name": "proteus.safetensors",
+      "image": "init.png",
+      "upload": "image"
+    },
+    "class_type": "LoadImage",
+    "_meta": {
+      "title": "Load Image"
+    }
+  },
+  "94": {
+    "inputs": {
+      "pixels": [
+        "93",
+        0
+      ],
+      "vae": [
+        "95",
+        2
+      ]
+    },
+    "class_type": "VAEEncode",
+    "_meta": {
+      "title": "VAE Encode"
+    }
+  },
+  "95": {
+    "inputs": {
+      "ckpt_name": "openvisionlightning.safetensors",
       "key_opt": "",
       "mode": "Auto"
     },
@@ -90,22 +116,11 @@
       "title": "Shared Checkpoint Loader (Inspire)"
     }
   },
-  "Latent": {
-    "inputs": {
-      "width": 1280,
-      "height": 1280,
-      "batch_size": 1
-    },
-    "class_type": "EmptyLatentImage",
-    "_meta": {
-      "title": "Empty Latent Image"
-    }
-  },
   "Negative_prompt": {
     "inputs": {
       "text": "embedding:negativeXL_A, ",
       "clip": [
-        "93",
+        "95",
         1
       ]
     },

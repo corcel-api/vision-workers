@@ -82,7 +82,7 @@
   },
   "75": {
     "inputs": {
-      "ckpt_name": "proteus.safetensors",
+      "ckpt_name": "openvisionlightning.safetensors",
       "key_opt": "",
       "mode": "Auto"
     },

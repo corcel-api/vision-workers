@@ -10,7 +10,7 @@ fi
 
 [ -f ComfyUI/models/checkpoints/dreamshaperturbo.safetensors ] || wget -O ComfyUI/models/checkpoints/dreamshaperturbo.safetensors https://huggingface.co/Lykon/dreamshaper-xl-v2-turbo/resolve/main/DreamShaperXL_Turbo_v2_1.safetensors?download=true
 
-[ -f ComfyUI/models/checkpoints/proteus.safetensors ] || wget -O ComfyUI/models/checkpoints/proteus.safetensors https://huggingface.co/dataautogpt3/ProteusV0.4-Lightning/resolve/main/ProteusV0.4-Lighting.safetensors?download=true
+[ -f ComfyUI/models/checkpoints/openvisionlightning.safetensors ] || wget -O ComfyUI/models/checkpoints/openvisionlightning.safetensors https://huggingface.co/diagonalge/openvision/resolve/master/openvisionv1-lightning.safetensors?download=true
 
 [ -f ComfyUI/models/checkpoints/playground.safetensors ] || wget -O ComfyUI/models/checkpoints/playground.safetensors https://huggingface.co/playgroundai/playground-v2.5-1024px-aesthetic/resolve/main/playground-v2.5-1024px-aesthetic.fp16.safetensors?download=true
 

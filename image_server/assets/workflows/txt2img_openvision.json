@@ -81,7 +81,7 @@
   },
   "93": {
     "inputs": {
-      "ckpt_name": "proteus.safetensors",
+      "ckpt_name": "openvisionlightning.safetensors",
       "key_opt": "",
       "mode": "Auto"
     },
@@ -103,7 +103,7 @@
   },
   "Negative_prompt": {
     "inputs": {
-      "text": "embedding:negativeXL_A",
+      "text": "embedding:negativeXL_A, ",
       "clip": [
         "93",
         1
