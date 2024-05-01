@@ -77,6 +77,11 @@ RUN conda run -n venv pip install --no-cache-dir xformers==0.0.23.post1 torchvis
     && conda run -n venv pip install -r /app/image_server_requirements.txt \
     && conda run -n venv pip install protobuf huggingface_hub[hf_transfer]
 
+COPY image_server/onnx_setup.sh /app/image_server/onnx_setup.sh
+
+RUN chmod +x /app/image_server/onnx_setup.sh && /app/image_server/onnx_setup.sh -y
+
+
 ENV HF_HUB_ENABLE_HF_TRANSFER=1
 
 # Copying server directories

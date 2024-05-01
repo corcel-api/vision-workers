@@ -10,7 +10,7 @@ minimum_cuda_version=120
 # Compare the CUDA version
 if [ $cuda_version_number -ge $minimum_cuda_version ]; then
     pip install onnxruntime-gpu --extra-index-url https://aiinfra.pkgs.visualstudio.com/PublicPackages/_packaging/onnxruntime-cuda-12/pypi/simple/
-    apt-get install libcublas-12-0
+    apt-get install -y libcublas-12-0
 else
     pip install onnxruntime-gpu==1.17.1
 fi
