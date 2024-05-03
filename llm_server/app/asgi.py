@@ -41,7 +41,7 @@ async def lifespan(app: fastapi.FastAPI):
     use_toxic_checker = os.getenv("TOXIC_CHECKER", None)
     half_precision = os.getenv("HALF_PRECISION", True)
     revision = os.getenv("REVISION", None)
-    n_device = os.getenv("N_DEVICE", 1)
+    n_device = int(os.getenv("N_DEVICE", '1'))
 
     # TODO: NICER NAME, prob refactor further
     engine_state = state.EngineState(n_device)
