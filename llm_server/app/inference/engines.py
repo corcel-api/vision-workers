@@ -1,10 +1,9 @@
 import torch
 from vllm import AsyncEngineArgs, AsyncLLMEngine
 from app.logging import logging
-from app.utils import determine_needs_await
+from app.utils import determine_needs_await, get_gpu_count
 from app import models
 from typing import Optional
-
 
 from app.inference import completions
 
@@ -18,7 +17,9 @@ async def _get_vllm_engine(
     else:
         dtype = "float32"
 
-    logging.info(f"Loading model {model_name} with dtype {dtype}")
+    device_count = get_gpu_count()
+
+    logging.info(f"Loading model {model_name} with dtype {dtype} on {device_count} GPUs")
     engine_args = AsyncEngineArgs(
         model=model_name,
         tokenizer=tokenizer_name,
@@ -28,7 +29,8 @@ async def _get_vllm_engine(
         max_num_seqs=256,
         max_logprobs=100,
         gpu_memory_utilization=0.80,
-        trust_remote_code=True
+        trust_remote_code=True,
+        tensor_parallel_size=device_count
     )
     model_instance = AsyncLLMEngine.from_engine_args(engine_args)
 

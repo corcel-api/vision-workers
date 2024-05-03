@@ -1,6 +1,6 @@
 from typing import List
 from app import models
-
+import torch
 
 def create_llm_prompt(messages: List[models.Message]):
     """
@@ -26,4 +26,8 @@ def determine_needs_await(cuda_version: str) -> bool:
     # TODO: CHANGE BACK
     return True
     return float(cuda_version) < 12.1
+
+def get_gpu_count():
+    return torch.cuda.device_count()
+
 
