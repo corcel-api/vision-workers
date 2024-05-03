@@ -9,7 +9,7 @@ from app.inference import completions
 
 
 async def _get_vllm_engine(
-    model_name: str, revision: str, tokenizer_name: str, half_precision: bool
+    model_name: str, revision: str, tokenizer_name: str, half_precision: bool, n_device: int
 ) -> models.LLMEngine:
     # This is needed as quantizing the small nous model's causes all sorts of trouble
     if half_precision:
@@ -17,9 +17,7 @@ async def _get_vllm_engine(
     else:
         dtype = "float32"
 
-    device_count = get_gpu_count()
-
-    logging.info(f"Loading model {model_name} with dtype {dtype} on {device_count} GPUs")
+    logging.info(f"Loading model {model_name} with dtype {dtype} on {n_device} GPUs")
     engine_args = AsyncEngineArgs(
         model=model_name,
         tokenizer=tokenizer_name,
@@ -30,7 +28,7 @@ async def _get_vllm_engine(
         max_logprobs=100,
         gpu_memory_utilization=0.80,
         trust_remote_code=True,
-        tensor_parallel_size=device_count
+        tensor_parallel_size=n_device
     )
     model_instance = AsyncLLMEngine.from_engine_args(engine_args)
 
@@ -55,10 +53,10 @@ async def _get_vllm_engine(
 
 
 async def get_llm_engine(
-    model_name: str, revision: str, tokenizer_name: Optional[str] = None, half_precision: bool = True
+    model_name: str, revision: str, tokenizer_name: Optional[str] = None, half_precision: bool = True, n_device: int = 1
 ) -> models.LLMEngine:
     # if "llava" not in model_name:
     # try:
     if tokenizer_name is None:
         tokenizer_name = model_name
-    return await _get_vllm_engine(model_name, revision, tokenizer_name, half_precision)
+    return await _get_vllm_engine(model_name, revision, tokenizer_name, half_precision, n_device)

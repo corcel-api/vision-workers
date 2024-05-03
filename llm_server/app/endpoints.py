@@ -56,7 +56,7 @@ router = fastapi.APIRouter(
 
 router.add_api_route(
     "/load_model",
-    load_model,  # Replace with your actual function
+    load_model,  
     methods=["POST"],
     response_model=schemas.LoadModelResponse,
     responses={
@@ -67,7 +67,7 @@ router.add_api_route(
 
 router.add_api_route(
     "/generate_text",
-    generate_text,  # Replace with your actual function
+    generate_text, 
     methods=["POST"],
     response_model=schemas.TextRequestModel,
     responses={

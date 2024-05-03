@@ -10,9 +10,10 @@ from typing import Optional
 
 
 class EngineState:
-    def __init__(self):
+    def __init__(self, n_device):
         self.llm_engine: Optional[models.LLMEngine] = None
         self.toxic_checker: Optional[models.ToxicEngine] = None
+        self.n_device = n_device
 
     def load_toxic_checker(self) -> None:
         if self.toxic_checker is None:
@@ -42,21 +43,21 @@ class EngineState:
             del self.llm_engine
             self.llm_engine = None
 
-        await self._load_engine(model_to_load, revision, tokenizer_name, half_precision)
+        await self._load_engine(model_to_load, revision, tokenizer_name, half_precision, self.n_device)
 
     async def _load_engine(
-        self, model_name: str, revision: str, tokenizer_name: str, half_precision: bool
+        self, model_name: str, revision: str, tokenizer_name: str, half_precision: bool, n_device: int
     ) -> None:
         torch.cuda.empty_cache()
         gc.collect()
         try:
             self.llm_engine = await engines.get_llm_engine(
-                model_name, revision, tokenizer_name, half_precision
+                model_name, revision, tokenizer_name, half_precision, n_device
             )
         except OSError:
             self.clean_cache_hf()
             self.llm_engine = await engines.get_llm_engine(
-                model_name, revision, tokenizer_name, half_precision
+                model_name, revision, tokenizer_name, half_precision, n_device
             )
 
 
