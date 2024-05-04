@@ -3,7 +3,7 @@
 disk_usage=$(df -h --output=pcent / | tail -n 1 | tr -d ' %')
 
 if [ "$disk_usage" -gt 50 ]; then
-    echo "Disk usage is above 50%, performing the action..."
+    echo "Disk usage is above 50%, cleaning older tags for docker images..."
     docker image ls --format "{{.Repository}}:{{.Tag}} {{.CreatedAt}}" | grep 'corcelio/cicd' | sort -rk2 > /tmp/docker_images.txt
     latest_orchestrator=$(grep 'orchestrator-' /tmp/docker_images.txt | head -n 1 | awk '{print $1}')
     latest_image_server=$(grep 'image-server-' /tmp/docker_images.txt | head -n 1 | awk '{print $1}')

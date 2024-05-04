@@ -10,7 +10,7 @@ trap cleanup SIGINT SIGTERM
 
 source activate venv
 
-bash ./setup.sh
+bash setup.sh
 
 vram_mode=${VRAM_MODE:-'--highvram'}
 warmup=$(echo ${WARMUP:-true} | tr '[:upper:]' '[:lower:]')
