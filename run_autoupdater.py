@@ -8,23 +8,6 @@ from typing import List
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
-def _wait_for_service(url, timeout=300, interval=10):
-    logging.info("Waiting for service to be up before any autoupdate action")
-    start_time = time.time()
-    while (time.time() - start_time) < timeout:
-        try:
-            response = requests.get(url)
-            if response.status_code == 200:
-                logging.info("Service is up!")
-                time.sleep(interval)
-                return True
-        except requests.exceptions.RequestException as e:
-            logging.error(f"Failed to connect, retrying in {interval} seconds...")
-        time.sleep(interval)
-    logging.error("Service did not respond in time.")
-    return False
-
-
 def _initialize_git_if_needed(repo_url: str, ports_to_kill: list, restart_script: str, restart_on_init: bool) -> None:
     if not os.path.isdir('.git'):
         logging.info("No .git directory found. Initializing and setting up remote repository...")
@@ -38,9 +21,7 @@ def _initialize_git_if_needed(repo_url: str, ports_to_kill: list, restart_script
         subprocess.run(["git", "clean", "-fd"], check=True)
         if restart_on_init:
             _stop_server_on_port(ports_to_kill)
-            subprocess.run(f"chmod +x {restart_script}", shell=True)
-            subprocess.Popen(f"/bin/sh {restart_script}", shell=True)
-        logging.info("Finished running the autoupdate steps! Server is ready with the latest tag.")
+        logging.info("Finished running the autoupdate steps! Code is ready with the latest tag.")
     else:
         logging.info(".git directory already exists.")
 
@@ -130,7 +111,6 @@ if __name__ == "__main__":
     comfyui_port = int(os.getenv('COMFYUI_SERVER_PORT', 8188))
 
     ping_url = f'http://localhost:{orchestrator_port}/docs'
-    _wait_for_service(ping_url)
     
     _initialize_git_if_needed(repo_url=repo_url, ports_to_kill=[orchestrator_port], 
                               restart_script=args.restart_script,
