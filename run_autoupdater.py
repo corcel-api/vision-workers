@@ -10,7 +10,7 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 
 import subprocess
 
-def _initialize_git_if_needed(repo_url: str, ports_to_kill: list, restart_script: str, restart_on_init: bool) -> None:
+def _initialize_git_if_needed(repo_url: str) -> None:
     if not os.path.isdir('.git'):
         logging.info("No .git directory found. Initializing and setting up remote repository...")
         subprocess.run(["git", "init"], check=True)
@@ -22,11 +22,7 @@ def _initialize_git_if_needed(repo_url: str, ports_to_kill: list, restart_script
         # Reset to the latest tag
         subprocess.run(["git", "reset", "--hard", latest_tag], check=True)
         subprocess.run(["git", "clean", "-fd"], check=True)
-        if restart_on_init:
-            _stop_server_on_port(ports_to_kill)
-            subprocess.run(f"chmod +x {restart_script}", shell=True)
-            subprocess.Popen(f"/bin/sh {restart_script}", shell=True)
-        logging.info("Finished running the autoupdate steps! Server is ready with the latest tag.")
+        logging.info("Finished running the autoupdate steps! Code is ready with the latest tag.")
     else:
         logging.info(".git directory already exists.")
 
@@ -102,7 +98,6 @@ if __name__ == "__main__":
 
     auto_updates_sleep = int(os.getenv('AUTOUP_SLEEP', '200'))
     env_autoup_token = os.getenv('ENV_TOKEN_AUTOUP', 'prod')
-    restart_on_init = True if os.getenv('RESTART_ON_INIT', 'false').lower() == 'true' else False
     git_repo = os.getenv('GIT_REPO', 'corcel-api/vision-workers') 
     git_pat = os.getenv('GIT_PAT', '')
     # in case of a private repo
@@ -118,9 +113,7 @@ if __name__ == "__main__":
 
     ping_url = f'http://localhost:{orchestrator_port}/docs'
     
-    _initialize_git_if_needed(repo_url=repo_url, ports_to_kill=[orchestrator_port], 
-                              restart_script=args.restart_script,
-                              restart_on_init=restart_on_init)
+    _initialize_git_if_needed(repo_url=repo_url)
 
     logging.info(f"Listening for Git tag updates with tags containing the token: {env_autoup_token}")
 
