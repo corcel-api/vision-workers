@@ -8,6 +8,7 @@ from app import models
 from app.inference import engines, completions, toxic
 from typing import Optional
 
+import errno
 
 class EngineState:
     def __init__(self):
@@ -55,11 +56,14 @@ class EngineState:
                 model_name, revision, tokenizer_name, half_precision
             )
         except OSError:
-            logging.info("OSError was thrown, clearing disk before loading model...")
-            self.clean_cache_hf()
-            self.llm_engine = await engines.get_llm_engine(
-                model_name, revision, tokenizer_name, half_precision
-            )
+            if e.errno == errno.ENOSPC:
+                logging.info("OSError was thrown, clearing disk before loading model...")
+                self.clean_cache_hf()
+                self.llm_engine = await engines.get_llm_engine(
+                    model_name, revision, tokenizer_name, half_precision
+                )
+            else:
+                raise
 
 
     # TODO: rename question & why is this needed?!
