@@ -34,7 +34,7 @@ RUN pip install --upgrade pip setuptools \
     && pip install huggingface_hub[hf_transfer] \
     && rm -rf /root/.cache/pip/*
 
-COPY image_server/ /app/image_server/
+COPY image_server /app/image_server
 COPY ecosystem_image.config.js /app/ecosystem_image.config.js
 
 ENV HF_HUB_ENABLE_HF_TRANSFER=1

@@ -19,9 +19,9 @@ port=${PORT:-6919}
 
 if [ -n "$vram_mode" ]
 then
-    python ./ComfyUI/main.py $vram_mode --cuda-device $device --disable-xformers &
+    python ComfyUI/main.py $vram_mode --cuda-device $device --disable-xformers &
 else
-    python ./ComfyUI/main.py --disable-xformers  --cuda-device $device &
+    python ComfyUI/main.py --disable-xformers  --cuda-device $device &
 fi
 
 
