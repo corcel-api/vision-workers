@@ -12,6 +12,8 @@ fi
 
 [ -f ComfyUI/models/checkpoints/openvisionlightning.safetensors ] || wget -O ComfyUI/models/checkpoints/openvisionlightning.safetensors https://huggingface.co/diagonalge/openvision/resolve/master/openvisionv1-lightning.safetensors?download=true
 
+[ -f ComfyUI/models/checkpoints/openvisionV2.safetensors ] || wget -O ComfyUI/models/checkpoints/openvisionV2.safetensors https://huggingface.co/diagonalge/openvision/resolve/master/Openvision-V2.safetensors?download=true
+
 [ -f ComfyUI/models/checkpoints/playground.safetensors ] || wget -O ComfyUI/models/checkpoints/playground.safetensors https://huggingface.co/playgroundai/playground-v2.5-1024px-aesthetic/resolve/main/playground-v2.5-1024px-aesthetic.fp16.safetensors?download=true
 
 [ -f ComfyUI/models/embeddings/negativeXL_A.safetensors ] || wget -O ComfyUI/models/embeddings/negativeXL_A.safetensors https://huggingface.co/gsdf/CounterfeitXL/resolve/main/embeddings/negativeXL_A.safetensors?download=true

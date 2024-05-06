@@ -6,7 +6,8 @@ import constants as cst
 
 class EngineEnum(str, Enum):
     DREAMSHAPER = "dreamshaper"
-    OPENVISION = "openvision"
+    OPENVISIONLIGHTNING = "openvisionlightning"
+    OPENVISIONV2 = "openvisionv2"
     PLAYGROUND = "playground"
 
 
@@ -21,10 +22,10 @@ class Txt2ImgBase(BaseModel):
         lt=50,
     )
     engine: EngineEnum = Field(
-        EngineEnum.OPENVISION.value, description="The engine to use for image generation"
+        EngineEnum.OPENVISIONV2.value, description="The engine to use for image generation"
     )
     cfg_scale: float = Field(
-        cst.DEFAULT_CFG, description="Guidance scale", gt=1.5, lt=12
+        cst.DEFAULT_CFG, description="Guidance scale", ge=1.5, lt=12
     )
     height: int = Field(
         cst.DEFAULT_HEIGHT,
@@ -49,7 +50,7 @@ class Img2ImgBase(BaseModel):
     )
     init_image: str
     engine: EngineEnum = Field(
-        EngineEnum.OPENVISION.value, description="The engine to use for image generation"
+        EngineEnum.OPENVISIONV2.value, description="The engine to use for image generation"
     )
     image_strength: float = Field(
         cst.DEFAULT_IMAGE_STRENGTH,
@@ -64,7 +65,7 @@ class Img2ImgBase(BaseModel):
         lt=50,
     )
     cfg_scale: float = Field(
-        cst.DEFAULT_CFG, description="Guidance scale", gt=1.5, lt=12
+        cst.DEFAULT_CFG, description="Guidance scale", ge=1.5, lt=12
     )
     seed: int = Field(
         ..., description="Seed value for deterministic outputs", ge=0

@@ -3,7 +3,7 @@ db/*.sql
 .git-rev
 .vscode/*.json
 tmp*
-
+*nohup*
 
 *.ipynb
 .gcloudignore
