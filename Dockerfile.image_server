@@ -42,6 +42,10 @@ ENV HF_HUB_ENABLE_HF_TRANSFER=1
 USER root
 ENV DEVICE=0
 
+RUN mkdir /app/cache
+ENV HF_HOME=/app/cache
+ENV HF_HUB_CACHE=/app/cache/hub
+
 RUN chmod +x /app/image_server/entrypoint.sh 
 
 CMD ["sh", "-c", "cd /app/image_server && ./entrypoint.sh"]
