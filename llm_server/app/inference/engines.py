@@ -28,8 +28,7 @@ async def _get_vllm_engine(
         max_num_seqs=256,
         max_logprobs=100,
         gpu_memory_utilization=0.80,
-        trust_remote_code=True,
-        download_dir=os.getenv("HF_HOME", None)
+        trust_remote_code=True
     )
     model_instance = AsyncLLMEngine.from_engine_args(engine_args)
 

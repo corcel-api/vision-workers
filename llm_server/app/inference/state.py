@@ -55,7 +55,7 @@ class EngineState:
             self.llm_engine = await engines.get_llm_engine(
                 model_name, revision, tokenizer_name, half_precision
             )
-        except OSError:
+        except OSError as e:
             if e.errno == errno.ENOSPC:
                 logging.info("OSError was thrown, clearing disk before loading model...")
                 self.clean_cache_hf()
