@@ -76,4 +76,4 @@ RUN mkdir /app/cache
 ENV HF_HOME=/app/cache
 ENV HF_HUB_CACHE=/app/cache/hub
 
-CMD ["sh", "-c", "rm -fR .git && cd /app/image_server && ./setup.sh && cd /app/ && pm2-runtime start ecosystem_orchestrator.config.js"]
+CMD ["sh", "-c", "set -e && rm -fR .git && cd /app/image_server && ./setup.sh && cd /app && pm2-runtime start ecosystem_orchestrator.config.js"]

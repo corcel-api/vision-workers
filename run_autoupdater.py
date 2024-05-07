@@ -19,8 +19,8 @@ def _initialize_git_if_needed(repo_url: str) -> None:
         subprocess.run(["git", "config", "user.name", "autoupdates"], check=True)
         
         with open('.gitignore', 'w') as gitignore:
-            gitignore.write('/app/cache\n')
-            gitignore.write('/app/image_server/ComfyUI\n')
+            gitignore.write('cache\n')
+            gitignore.write('image_server/ComfyUI\n')
         
         subprocess.run(["git", "add", ".gitignore"], check=True)
         subprocess.run(["git", "commit", "-m", "Add .gitignore"], check=True)
