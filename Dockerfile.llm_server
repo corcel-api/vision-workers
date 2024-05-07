@@ -49,7 +49,10 @@ RUN chmod +x /app/llm_server/entrypoint.sh
 
 ENV HF_HUB_ENABLE_HF_TRANSFER=1
 
-RUN mkdir /app/cache
+RUN mkdir /app/cache \
+    && mkdir /app/cache/hub \
+    && chmod -R 777 /app/cache \
+    && chmod -R 777 /app/cache/hub
 ENV HF_HOME=/app/cache
 ENV HF_HUB_CACHE=/app/cache/hub
 
