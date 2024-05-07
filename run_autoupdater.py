@@ -14,8 +14,10 @@ def _initialize_git_if_needed(repo_url: str) -> None:
     if not os.path.isdir('.git'):
         logging.info("No .git directory found. Initializing and setting up remote repository...")
         subprocess.run(["git", "init"], check=True)
+
+        subprocess.run(["git", "config", "user.email", "autoupdates@corcel.io"], check=True)
+        subprocess.run(["git", "config", "user.name", "autoupdates"], check=True)
         
-        # Create a .gitignore file and add the directories to be ignored
         with open('.gitignore', 'w') as gitignore:
             gitignore.write('/app/cache\n')
             gitignore.write('/app/image_server/ComfyUI\n')
