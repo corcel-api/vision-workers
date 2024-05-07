@@ -13,7 +13,7 @@ source activate venv
 vram_mode=${VRAM_MODE:-'--highvram'}
 warmup=$(echo ${WARMUP:-true} | tr '[:upper:]' '[:lower:]')
 device=${DEVICE:-0}
-port=${PORT:-6919}D
+port=${PORT:-6919}
 
 if [ -n "$vram_mode" ]
 then
