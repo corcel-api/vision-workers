@@ -14,30 +14,17 @@ def _initialize_git_if_needed(repo_url: str) -> None:
     if not os.path.isdir('.git'):
         logging.info("No .git directory found. Initializing and setting up remote repository...")
         subprocess.run(["git", "init"], check=True)
-
-        subprocess.run(["git", "config", "user.email", "autoupdates@corcel.io"], check=True)
-        subprocess.run(["git", "config", "user.name", "autoupdates"], check=True)
-        
-        with open('.gitignore', 'w') as gitignore:
-            gitignore.write('cache\n')
-            gitignore.write('image_server/ComfyUI\n')
-        
-        subprocess.run(["git", "add", ".gitignore"], check=True)
-        subprocess.run(["git", "commit", "-m", "Add .gitignore"], check=True)
         subprocess.run(["git", "remote", "add", "origin", repo_url], check=True)
         subprocess.run(["git", "fetch", "--tags"], check=True)
         # Find the latest tag
         latest_tag_hash = subprocess.check_output(["git", "rev-list", "--tags", "--max-count=1"], text=True).strip()
         latest_tag = subprocess.check_output(["git", "describe", "--tags", latest_tag_hash], text=True).strip()
-        
         # Reset to the latest tag
         subprocess.run(["git", "reset", "--hard", latest_tag], check=True)
-        subprocess.run(["git", "clean", "-fd"], check=True)
-        
+        subprocess.run(["git", "clean", "-fd", "--exclude=cache/", "--exclude=image_server/ComfyUI"], check=True)
         logging.info("Finished running the autoupdate steps! Code is ready with the latest tag.")
     else:
         logging.info(".git directory already exists.")
-
 
 
 def _get_latest_tag() -> str:
