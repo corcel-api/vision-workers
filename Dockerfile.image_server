@@ -47,5 +47,6 @@ ENV HF_HOME=/app/cache
 ENV HF_HUB_CACHE=/app/cache/hub
 
 RUN chmod +x /app/image_server/entrypoint.sh 
+RUN chmod +x /app/image_server/setup.sh 
 
 CMD ["sh", "-c", "cd /app/image_server && ./entrypoint.sh"]
