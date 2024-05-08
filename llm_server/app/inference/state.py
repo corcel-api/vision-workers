@@ -32,9 +32,12 @@ class EngineState:
                 return
             destroy_model_parallel()
             os.system('export MODEL='+model_to_load)
-            os.system('export TOKENIZER='+tokenizer_name)
-            os.system('export HALF_PRECISION='+half_precision)
-            os.system('export REVISION='+revision)
+            if tokenizer_name:
+                os.system('export TOKENIZER='+tokenizer_name)
+            if half_precision:
+                os.system('export HALF_PRECISION='+half_precision)
+            if revision:
+                os.system('export REVISION='+revision)
             patch.stop_server_on_port([6919])
             patch.reload('/app/llm_server/entrypoint.sh')
             """
