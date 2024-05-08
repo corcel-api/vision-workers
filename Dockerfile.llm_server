@@ -55,5 +55,5 @@ EXPOSE $CURRENT_SERVER_PORT
 RUN mkdir /app/cache
 ENV HF_HOME=/app/cache
 
-CMD ["sh", "-c", "cd /app/llm_server && entrypoint.sh"]
+CMD ["sh", "-c", "cd /app/llm_server && ./entrypoint.sh"]
 
