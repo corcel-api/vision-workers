@@ -1,5 +1,6 @@
 import gc
 import subprocess
+import os
 import torch
 from huggingface_hub import scan_cache_dir
 from vllm.model_executor.parallel_utils.parallel_state import destroy_model_parallel
@@ -31,6 +32,10 @@ class EngineState:
                 logging.info(f"Model {model_to_load} already loaded")
                 return
             old_model_name = self.llm_engine.model_name
+            if model_to_load:
+                os.system('export MODEL='+model_to_load)
+            if tokenizer_name:
+                os.system('export TOKENIZER='+tokenizer_name)
             try:
                 destroy_model_parallel()
                 subprocess.run(["ray", "stop", "--force"], check=True)
