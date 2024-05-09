@@ -38,7 +38,7 @@ class EngineState:
             destroy_model_parallel()
             torch.cuda.empty_cache()
             torch.distributed.destroy_process_group()
-            del self.llm_engine.model.llm_engine.model_executor
+            del self.llm_engine.model.engine.model_executor
             del self.llm_engine.model
             del self.llm_engine
             gc.collect()
