@@ -4,7 +4,7 @@ import ray
 import torch
 import os
 from huggingface_hub import scan_cache_dir
-from vllm.distributed.parallel_state import destroy_model_parallel
+from vllm.model_executor.parallel_utils.parallel_state import destroy_model_parallel
 from app.logging import logging
 from app import models
 from app.inference import engines, completions, toxic, patch
@@ -33,22 +33,22 @@ class EngineState:
                 logging.info(f"Model {model_to_load} already loaded")
                 return
             old_model_name = self.llm_engine.model_name
-            try:
-                os.environ["TOKENIZERS_PARALLELISM"] = "false"
-                destroy_model_parallel()
-                torch.cuda.empty_cache()
-                torch.distributed.destroy_process_group()
-                del self.llm_engine.model.llm_engine.model_executor
-                del self.llm_engine.model
-                del self.llm_engine
-                gc.collect()
-                ray.shutdown()
-                sleep(2)
-                logging.info(f"Unloaded model {old_model_name} ✅")
-            except Exception:
-                logging.debug(
-                    "Tried to unload a vllm model & failed - probably wasn't a vllm model"
-                )
+            #try:
+            os.environ["TOKENIZERS_PARALLELISM"] = "false"
+            destroy_model_parallel()
+            torch.cuda.empty_cache()
+            torch.distributed.destroy_process_group()
+            del self.llm_engine.model.llm_engine.model_executor
+            del self.llm_engine.model
+            del self.llm_engine
+            gc.collect()
+            ray.shutdown()
+            sleep(2)
+            logging.info(f"Unloaded model {old_model_name} ✅")
+            #except Exception:
+            #    logging.debug(
+            #        "Tried to unload a vllm model & failed - probably wasn't a vllm model"
+            #    )
             self.llm_engine = None
         await self._load_engine(model_to_load, revision, tokenizer_name, half_precision, self.n_device)
 
