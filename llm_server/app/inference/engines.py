@@ -19,6 +19,7 @@ async def _get_vllm_engine(
 
     logging.info(f"Loading model {model_name} with dtype {dtype} on {n_device} GPUs")
     engine_args = AsyncEngineArgs(
+        engine_use_ray=True,
         model=model_name,
         tokenizer=tokenizer_name,
         dtype=dtype,
