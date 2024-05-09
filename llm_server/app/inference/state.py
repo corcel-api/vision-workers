@@ -33,14 +33,17 @@ class EngineState:
             old_model_name = self.llm_engine.model_name
             try:
                 destroy_model_parallel()
+                torch.cuda.empty_cache()
+                torch.distributed.destroy_process_group()
+                del self.llm_engine.model.driver_worker
+                del self.llm_engine.model
+                del self.llm_engine
+                gc.collect()
                 logging.info(f"Unloaded model {old_model_name} ✅")
             except Exception:
                 logging.debug(
                     "Tried to unload a vllm model & failed - probably wasn't a vllm model"
                 )
-
-            del self.llm_engine.model
-            del self.llm_engine
             self.llm_engine = None
         await self._load_engine(model_to_load, revision, tokenizer_name, half_precision, self.n_device)
 
