@@ -1,12 +1,11 @@
 import gc
-import subprocess
 import os
 import torch
 from huggingface_hub import scan_cache_dir
 from vllm.model_executor.parallel_utils.parallel_state import destroy_model_parallel
 from app.logging import logging
 from app import models
-from app.inference import engines, completions, toxic
+from app.inference import engines, completions, toxic, patch
 from typing import Optional
 
 
@@ -32,13 +31,8 @@ class EngineState:
                 logging.info(f"Model {model_to_load} already loaded")
                 return
             old_model_name = self.llm_engine.model_name
-            if model_to_load:
-                os.system('export MODEL='+model_to_load)
-            if tokenizer_name:
-                os.system('export TOKENIZER='+tokenizer_name)
             try:
                 destroy_model_parallel()
-                subprocess.run(["ray", "stop", "--force"], check=True)
                 logging.info(f"Unloaded model {old_model_name} ✅")
             except Exception:
                 logging.debug(
@@ -48,8 +42,6 @@ class EngineState:
             del self.llm_engine.model
             del self.llm_engine
             self.llm_engine = None
-            
-
         await self._load_engine(model_to_load, revision, tokenizer_name, half_precision, self.n_device)
 
     async def _load_engine(
