@@ -304,6 +304,7 @@ def base64_to_tensor(img_base64: str) -> torch.Tensor:
         if images.dim() == 3 and images.shape[0] == 3:
             images = resize_transform(images)
             print("Image processed successfully")
+            return images 
         else:
             raise ValueError("Check the shape of the image tensor. It should be (3, H, W).")
     except ValueError as e:
