@@ -264,12 +264,12 @@ conv_llava_v1_mmtag = Conversation(
     version="v1_mmtag",
 )
 
-def get_llava_prompt(messages: list[str]) -> str:
+def get_llava_prompt(messages: list) -> str:
     chat_template = Conversation(
                         system="",
-                        roles=tuple(set([elm['role'].value.upper() for elm in messages])),
+                        roles=tuple(set([elm.role.value.upper() for elm in messages])),
                         version="v1",
-                        messages=[(elm['role'].value.upper(), elm['content']) for elm in messages],
+                        messages=[(elm.role.value.upper(), elm.content) for elm in messages],
                         offset=0,
                         sep_style=SeparatorStyle.TWO,
                         sep="\n",
