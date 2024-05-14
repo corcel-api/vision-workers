@@ -6,6 +6,7 @@ import base64
 from io import BytesIO
 import io
 from PIL import Image
+import requests
 
 import torch
 import torchvision.transforms as transforms
@@ -311,3 +312,10 @@ def base64_to_tensor(img_base64: str) -> torch.Tensor:
         print(f"ValueError: {str(e)}")
     except Exception as e:
         print(f"An error occurred while processing the image: {str(e)}")
+
+
+def image_url_to_base64(image_url):
+    response = requests.get(image_url)
+    response.raise_for_status()  # Ensure the request was successful
+    image_base64 = base64.b64encode(response.content).decode('utf-8')
+    return image_base64

@@ -5,7 +5,7 @@ from vllm import SamplingParams
 from vllm.model_executor.utils import set_random_seed
 from app import models
 from app.models import Message, Role
-from app.utils import get_llava_prompt, base64_to_tensor
+from app.utils import get_llava_prompt, base64_to_tensor, image_url_to_base64
 import json
 from app.logging import logging
 from typing import Any
@@ -141,8 +141,12 @@ async def complete_vllm(
 
     if 'llava' in engine.model_name:
         formatted_prompt = get_llava_prompt(request_info.messages)
-        images = base64_to_tensor(request_info.img_base64)
-        print(request_info.img_base64)
+        if request_info.img_base64 is not None:
+            images = base64_to_tensor(request_info.img_base64)
+        elif request_info.img_url is not None:
+            images = base64_to_tensor(image_url_to_base64(request_info.img_url))
+        else:
+            raise ValueError('An image should be provided!')
         stream = await engine.model.add_request(uuid.uuid4().hex, formatted_prompt, 
                                                 sampling_params, multi_modal_data=MultiModalData(
                                                     type=MultiModalData.Type.IMAGE, data=images.unsqueeze(0)
