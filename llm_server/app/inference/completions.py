@@ -142,6 +142,7 @@ async def complete_vllm(
     if 'llava' in engine.model_name:
         formatted_prompt = get_llava_prompt(request_info.messages)
         images = base64_to_tensor(request_info.img_base64)
+        print(request_info.img_base64)
         stream = await engine.model.add_request(uuid.uuid4().hex, formatted_prompt, 
                                                 sampling_params, multi_modal_data=MultiModalData(
                                                     type=MultiModalData.Type.IMAGE, data=images.unsqueeze(0)

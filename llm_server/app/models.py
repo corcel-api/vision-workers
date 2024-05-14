@@ -87,6 +87,12 @@ class RequestInfo(BaseModel):
         description="Top P for text generation. This nearly always should be 1",
     )
 
+    img_base64 : str = Field(
+        default=None,
+        title='Image in base 64',
+        description='Image to pass to multimodel for caption'
+    )
+
     class Config:
         extra = "allow"
 
