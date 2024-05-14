@@ -19,17 +19,40 @@ async def _get_vllm_engine(
         dtype = "float32"
 
     logging.info(f"Loading model {model_name} with dtype {dtype}")
-    engine_args = AsyncEngineArgs(
-        model=model_name,
-        tokenizer=tokenizer_name,
-        dtype=dtype,
-        enforce_eager=False,
-        revision=revision,
-        max_num_seqs=256,
-        max_logprobs=100,
-        gpu_memory_utilization=0.80,
-        trust_remote_code=True
-    )
+
+    if 'llava' in model_name:
+        vision_params = {'image_input_type': 'pixel_values',
+                         'image_token_id': 32000,
+                         'image_input_shape': '1,3,336,336',
+                         'image_feature_size': 576}
+        logging.info('Using vision params : ', vision_params)
+        engine_args = AsyncEngineArgs(
+            model=model_name,
+            tokenizer=tokenizer_name,
+            dtype=dtype,
+            enforce_eager=False,
+            revision=revision,
+            max_num_seqs=256,
+            max_logprobs=100,
+            gpu_memory_utilization=0.80,
+            trust_remote_code=True,
+            image_input_type=vision_params['image_input_type'],
+            image_token_id=vision_params['image_token_id'],
+            image_input_shape=vision_params['image_input_shape'],
+            image_feature_size=vision_params['image_feature_size'],
+        )
+    else:
+        engine_args = AsyncEngineArgs(
+            model=model_name,
+            tokenizer=tokenizer_name,
+            dtype=dtype,
+            enforce_eager=False,
+            revision=revision,
+            max_num_seqs=256,
+            max_logprobs=100,
+            gpu_memory_utilization=0.80,
+            trust_remote_code=True
+        )
     model_instance = AsyncLLMEngine.from_engine_args(engine_args)
 
     cuda_version = torch.version.cuda

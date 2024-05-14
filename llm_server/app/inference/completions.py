@@ -1,10 +1,11 @@
 from typing import AsyncGenerator, List
-
-
+import torchvision.transforms as transforms
+from vllm.sequence import MultiModalData
 from vllm import SamplingParams
 from vllm.model_executor.utils import set_random_seed
 from app import models
 from app.models import Message, Role
+from app.utils import get_llava_prompt, base64_to_tensor
 import json
 from app.logging import logging
 from typing import Any
@@ -13,7 +14,7 @@ SYSTEM_PROMPT_PREFIX = "Instructions to follow for all following messages: "
 
 
 def missing_system_prompts(tokenizer: Any) -> bool:
-    return "must alternate" in tokenizer.chat_template.lower()
+    return "must alternate" in (getattr(tokenizer, "chat_template", "") or "").lower()
 
 
 def _join_sequential_messages(
@@ -126,29 +127,9 @@ async def complete_vllm(
     # Our use cases have top p 0 or 1
     if not top_p != 0:
         top_p = 1
-
-    messages_dict = [
-        message.model_dump()
-        for message in fix_message_structure_for_prompt(
-            engine.tokenizer, request_info.messages
-        )
-    ]
-    # TODO: Review why system prompt doesn't work :(
-    formatted_prompt = engine.tokenizer.apply_chat_template(
-        conversation=messages_dict,
-        tokenize=False,
-        add_generation_prompt=starting_assistant_message)
-    if 'llama-3' in engine.model_name and not starting_assistant_message:
-        # we want to revmoe anything from the last instance of <|eot_id|> onwards
-        formatted_prompt = formatted_prompt[:formatted_prompt.rfind("<|eot_id|>")]
-
-    end_of_string_token = engine.tokenizer.eos_token
-    if not starting_assistant_message and formatted_prompt.rstrip().endswith(
-        end_of_string_token
-    ):
-        formatted_prompt = formatted_prompt.rstrip()[: -len(end_of_string_token)]
-
+    
     set_random_seed(seed)
+
     sampling_params = SamplingParams(
         max_tokens=request_info.max_tokens,
         temperature=temperature,
@@ -157,9 +138,40 @@ async def complete_vllm(
         logprobs=number_of_logprobs,
         top_k=top_k,
     )
-    stream = await engine.model.add_request(
-        uuid.uuid4().hex, formatted_prompt, sampling_params
-    )
+
+    if 'llava' in engine.model_name:
+        formatted_prompt = get_llava_prompt(request_info.messages)
+        images = base64_to_tensor(request_info.img_base64)
+        stream = await engine.model.add_request(uuid.uuid4().hex, formatted_prompt, 
+                                                sampling_params, multi_modal_data=MultiModalData(
+                                                    type=MultiModalData.Type.IMAGE, data=images.unsqueeze(0)
+                                                    )
+                )
+    else:
+        messages_dict = [
+            message.model_dump()
+            for message in fix_message_structure_for_prompt(
+                engine.tokenizer, request_info.messages
+            )
+        ]
+        # TODO: Review why system prompt doesn't work :(
+        formatted_prompt = engine.tokenizer.apply_chat_template(
+            conversation=messages_dict,
+            tokenize=False,
+            add_generation_prompt=starting_assistant_message)
+        if 'llama-3' in engine.model_name and not starting_assistant_message:
+            # we want to revmoe anything from the last instance of <|eot_id|> onwards
+            formatted_prompt = formatted_prompt[:formatted_prompt.rfind("<|eot_id|>")]
+
+        end_of_string_token = engine.tokenizer.eos_token
+        if not starting_assistant_message and formatted_prompt.rstrip().endswith(
+            end_of_string_token
+        ):
+            formatted_prompt = formatted_prompt.rstrip()[: -len(end_of_string_token)]
+
+        stream = await engine.model.add_request(
+            uuid.uuid4().hex, formatted_prompt, sampling_params
+        )
 
     cursor = 0
     logprobs_cursor = 0
