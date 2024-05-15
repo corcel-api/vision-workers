@@ -23,8 +23,8 @@ SERVERS_JSON_LOC = "tests/servers.json"
 PROMPTS_LOC = "tests/test_prompts.txt"
 MODELS_TO_TEST_LOC = "tests/models_to_test.json"
 TEST_SAVE_LOC = "tests/test_results.csv"
-NUMBER_OF_TESTS = 20
-VALIDATOR_TASKS = [Tasks.chat_mixtral, Tasks.chat_bittensor_finetune]
+NUMBER_OF_TESTS = 3
+VALIDATOR_TASKS = [Tasks.chat_llama_3]
 
 print("Starting script...")
 
@@ -125,19 +125,22 @@ async def stream_text_from_server(body: dict, url: str) -> AsyncGenerator[str, N
 async def process_validation_test(test: ValidationTest) -> None:
     print(f"Processing validation test: {test}")
     test_results = []
-    
+    payload_results = {}
     for miner in test.miners_to_test:
         print(f"Loading model for miner: {miner}")
         await make_load_model_request(miner)
+        payload_results[miner.model.model] = []
         for prompt in test.prompts_to_check:
             print(f"Streaming text for prompt: {prompt}")
             miner_stream = stream_text_from_server(prompt.dict(), miner.server_details.endpoint)
             response = await _stream_response_from_stream_miners_until_result(miner_stream, miner)
-            print(f"Making check request with response: {response}")
-            check = await make_request(test.validator_server, CheckResultsRequest(task=test.validator_task,
-                                                                                  synthetic_query=False,
-                                                                                  result=response,
-                                                                                  synapse=prompt.dict()), "/check-result")
+            payload = CheckResultsRequest(task=test.validator_task,
+                                          synthetic_query=False,
+                                          result=response,
+                                          synapse=prompt.dict())
+            payload_results[miner.model.model].append(payload.dict())
+            print(f"Making check request with payload: {payload}")
+            check = await make_request(test.validator_server, payload, "/check-result")
             try:
                 score = check.json()["axon_scores"][miner.server_details.id]
                 test_res = TestInstanceResults(score=score, miner_server=miner, validator_server=test.validator_server,
@@ -147,6 +150,14 @@ async def process_validation_test(test: ValidationTest) -> None:
             except Exception as e:
                 print(e)
     save_test_results_to_csv(test_results)
+    save_test_results_to_json(payload_results)
+
+def save_test_results_to_json(payload_results: Dict[str, List[Any]]) -> None:
+    print("Saving test results to JSON")
+    results_to_save = [{"miner_model": model, "payloads": payloads} for model, payloads in payload_results.items()]
+    with open(TEST_SAVE_LOC.replace('.csv', '.json'), 'w') as f:
+        json.dump(results_to_save, f, indent=4)
+    print("Test results saved to JSON")
 
 def save_test_results_to_csv(test_results: List[TestInstanceResults]) -> None:
     print("Saving test results to CSV")
@@ -158,7 +169,7 @@ def save_test_results_to_csv(test_results: List[TestInstanceResults]) -> None:
         flattened_results.append(res)
     df = pd.DataFrame(flattened_results)
     df.to_csv(TEST_SAVE_LOC, mode='a' if os.path.exists(TEST_SAVE_LOC) else 'w', header=not os.path.exists(TEST_SAVE_LOC), index=False)
-    print("Test results saved")
+    print("Test results saved to CSV")
 
 def flatten_server_instance_details(server_instance: ServerInstance) -> Dict[str, Any]:
     print(f"Flattening server instance details for {server_instance}")
