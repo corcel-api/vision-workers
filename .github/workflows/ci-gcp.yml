@@ -650,7 +650,9 @@ jobs:
                               "12.2",
                               "12.3"
                             ],
-                            "env_vars": {}
+                            "env_vars": {},
+                            "network_volume_id": "2qa9sywxto",
+                            "volume_mount_path": "/app"
                           }')
           instance_id=$(echo "$response" | jq -r '.id')
           echo "::set-output name=instance_id::$instance_id"
@@ -759,7 +761,9 @@ jobs:
                               "12.2",
                               "12.3"
                             ],
-                            "env_vars": {}
+                            "env_vars": {},
+                            "network_volume_id": "21bohylg0m",
+                            "volume_mount_path": "/app"
                           }')
           instance_id=$(echo "$response" | jq -r '.id')
           echo "::set-output name=instance_id::$instance_id"
@@ -849,7 +853,9 @@ jobs:
                               "12.2",
                               "12.3"
                             ],
-                            "env_vars": {}
+                            "env_vars": {},
+                            "network_volume_id": "dio9qxl762",
+                            "volume_mount_path": "/app"
                           }')
           instance_id=$(echo "$response" | jq -r '.id')
           echo "::set-output name=instance_id::$instance_id"
