@@ -1,12 +1,14 @@
 import gc
 
 import torch
+from huggingface_hub import scan_cache_dir
 from vllm.model_executor.parallel_utils.parallel_state import destroy_model_parallel
 from app.logging import logging
 from app import models
 from app.inference import engines, completions, toxic
 from typing import Optional
 
+import errno
 
 class EngineState:
     def __init__(self):
@@ -49,9 +51,20 @@ class EngineState:
     ) -> None:
         torch.cuda.empty_cache()
         gc.collect()
-        self.llm_engine = await engines.get_llm_engine(
-            model_name, revision, tokenizer_name, half_precision
-        )
+        try:
+            self.llm_engine = await engines.get_llm_engine(
+                model_name, revision, tokenizer_name, half_precision
+            )
+        except OSError as e:
+            if e.errno == errno.ENOSPC:
+                logging.info("OSError was thrown, clearing disk before loading model...")
+                self.clean_cache_hf()
+                self.llm_engine = await engines.get_llm_engine(
+                    model_name, revision, tokenizer_name, half_precision
+                )
+            else:
+                raise
+
 
     # TODO: rename question & why is this needed?!
     async def grab_the_right_prompt(engine: models.LLMEngine, question: str):
@@ -59,6 +72,16 @@ class EngineState:
             return question
         else:
             return question
+        
+    def clean_cache_hf(self):
+        logging.info("Clearing HuggingFace cache dir...")
+        cache_info = scan_cache_dir()
+        to_clean = []
+        for repo in cache_info.repos:
+            to_clean += [revision.commit_hash for revision in repo.revisions]
+        delete_strategy = cache_info.delete_revisions(*to_clean)
+        logging.info(f"Will free {delete_strategy.expected_freed_size_str}.")
+        delete_strategy.execute()
 
     # TODO: WHY IS THIS NEEDED?
     # async def gen_stream(self, prompt, generation_kwargs, model):

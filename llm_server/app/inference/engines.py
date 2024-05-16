@@ -4,7 +4,7 @@ from app.logging import logging
 from app.utils import determine_needs_await
 from app import models
 from typing import Optional
-
+import os
 
 from app.inference import completions
 

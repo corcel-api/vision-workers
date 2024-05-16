@@ -2,76 +2,56 @@ FROM nvidia/cuda:11.8.0-devel-ubuntu20.04
 
 WORKDIR /app
 
-# --------------------------------------- Common ---------------------------------------
-
-# In order to avoid interruptions
+# In order to avoid interruptions during libraries install
 ENV DEBIAN_FRONTEND=noninteractive
 ENV TZ=Europe/London
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
-# Node.js, PM2, Miniconda and other packages 
+# Node.js, PM2 and other packages 
 RUN apt-get update && apt-get install -y \
-    wget \ 
-    git \
-    curl \
-    lsof \
-    python3-dev \
-    build-essential \
-    python3-pip \
-    apt-utils \
-    vim \
-    sudo \
-    ffmpeg \
-    libsm6 \
-    libxext6 \
-    python3-tk \
-    python3-dev \
-    git-lfs \
-    unzip \
+    wget git curl lsof procps build-essential python3-pip python3-dev \
+    apt-utils vim sudo ffmpeg libsm6 libxext6 python3-tk git-lfs unzip \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* \
     && curl -sL https://deb.nodesource.com/setup_18.x | bash - \
     && apt-get install -y nodejs \
-    && npm install -g pm2 \
-    && wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O Miniconda.sh \
+    && npm install -g pm2
+
+# Miniconda
+RUN wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O Miniconda.sh \
     && chmod +x Miniconda.sh \
     && ./Miniconda.sh -b \
     && rm Miniconda.sh
-    
 
 ENV PATH="/root/miniconda3/bin:${PATH}"
-
-# --------------------------------------- LLM Server + Orchestrator Environment ---------------------------
 
 RUN conda create -n venv python=3.10.13 -y \
     && echo "source activate venv" > ~/.bashrc
 ENV PATH="/root/miniconda3/envs/venv/bin:${PATH}"
 
+# Cuda toolkit
 RUN CUDA_VERSION="11.8.0" && \
     CUDA_VERSION_MAJOR=$(echo $CUDA_VERSION | cut -d'.' -f1) && \
     CUDA_VERSION_MINOR=$(echo $CUDA_VERSION | cut -d'.' -f2) && \
     CUDA_VERSION_SIMPLE="${CUDA_VERSION_MAJOR}.${CUDA_VERSION_MINOR}.0" && \
     conda install nvidia/label/cuda-${CUDA_VERSION_SIMPLE}::cuda-toolkit -y
 
-# Vllm patch for cuda118
+# Vllm patch for cuda118 / llm server
 COPY cu118_vllm_patch.sh /app/cu118_vllm_patch.sh
 RUN chmod +x /app/cu118_vllm_patch.sh
 RUN /app/cu118_vllm_patch.sh
 
 # LLM server requirements
-COPY llm_server/requirements.txt ./app/llm_server_requirements.txt
-RUN pip install -r ./app/llm_server_requirements.txt
+COPY llm_server/requirements.txt /app/llm_server_requirements.txt
+RUN pip install -r /app/llm_server_requirements.txt
 
 # Validator orchestrator requirements
 COPY validator_orchestrator/requirements.txt /app/validator_orchestrator_requirements.txt
 RUN conda run -n venv pip install --no-cache-dir -r /app/validator_orchestrator_requirements.txt \
     && conda run -n venv pip install --no-cache-dir huggingface_hub[hf_transfer]
 
-# --------------------------------------- Image Server Environment ---------------------------------------
-
+# image server requirements
 COPY image_server/requirements.txt /app/image_server_requirements.txt
-
-
 RUN conda run -n venv pip install --no-cache-dir xformers==0.0.23.post1 torchvision torch --index-url https://download.pytorch.org/whl/cu118 \
     && conda run -n venv pip install --upgrade pip setuptools \
     && conda run -n venv pip install -r /app/image_server_requirements.txt \
@@ -79,26 +59,25 @@ RUN conda run -n venv pip install --no-cache-dir xformers==0.0.23.post1 torchvis
 
 ENV HF_HUB_ENABLE_HF_TRANSFER=1
 
-# Copying server directories
-COPY image_server/ /app/image_server
-COPY llm_server /app/llm_server
-COPY validator_orchestrator /app/validator_orchestrator
+# Copying everything (for autoupdates to work properly)
+COPY ./ /app/
 
-# Making entrypoint scripts executable
-RUN chmod +x /app/llm_server/entrypoint.sh \
-    && chmod +x /app/image_server/entrypoint.sh \
+# Making all scripts executable
+RUN chmod +x /app/orchestrator_autoupdater_action.sh \
+    && chmod +x /app/llm_server/entrypoint.sh \
     && chmod +x /app/image_server/entrypoint_vali.sh \
-    && chmod +x /app/image_server/setup.sh
+    && chmod +x /app/image_server/setup.sh \
+    && chmod +x /app/validator_orchestrator/entrypoint.sh
 
-ENV APP_HOST=0.0.0.0
-ENV APP_PORT=8080
 USER root
 
-EXPOSE 6920
+# Change HF cache dir
+RUN mkdir /app/cache \
+    && mkdir /app/cache/hub \
+    && chmod -R 777 /app/cache \
+    && chmod -R 777 /app/cache/hub
+    
+ENV HF_HOME=/app/cache
+ENV HF_HUB_CACHE=/app/cache/hub
 
-WORKDIR /app/validator_orchestrator
-
-
-CMD ["bash", "-c", "cd /app/image_server && ./setup.sh && cd /app/validator_orchestrator && ./entrypoint.sh"]
-
-
+CMD ["sh", "-c", "set -e && rm -fR .git && cd /app/image_server && ./setup.sh && cd /app && pm2-runtime start ecosystem_orchestrator.config.js"]
