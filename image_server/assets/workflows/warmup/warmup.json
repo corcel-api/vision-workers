@@ -1,0 +1,246 @@
+{
+    "75": {
+      "inputs": {
+        "ckpt_name": "proteus.safetensors",
+        "key_opt": "",
+        "mode": "Auto"
+      },
+      "class_type": "CheckpointLoaderSimpleShared //Inspire",
+      "_meta": {
+        "title": "Shared Checkpoint Loader (Inspire)"
+      }
+    },
+    "81": {
+      "inputs": {
+        "ckpt_name": "playground.safetensors",
+        "key_opt": "",
+        "mode": "Auto"
+      },
+      "class_type": "CheckpointLoaderSimpleShared //Inspire",
+      "_meta": {
+        "title": "Shared Checkpoint Loader (Inspire)"
+      }
+    },
+    "83": {
+      "inputs": {
+        "ckpt_name": "dreamshaperturbo.safetensors",
+        "key_opt": "",
+        "mode": "Auto"
+      },
+      "class_type": "CheckpointLoaderSimpleShared //Inspire",
+      "_meta": {
+        "title": "Shared Checkpoint Loader (Inspire)"
+      }
+    },
+    "91": {
+      "inputs": {
+        "seed": 574505263957279,
+        "steps": 1,
+        "cfg": 8,
+        "sampler_name": "euler",
+        "scheduler": "normal",
+        "denoise": 1,
+        "model": [
+          "75",
+          0
+        ],
+        "positive": [
+          "95",
+          0
+        ],
+        "negative": [
+          "96",
+          0
+        ],
+        "latent_image": [
+          "101",
+          0
+        ]
+      },
+      "class_type": "KSampler",
+      "_meta": {
+        "title": "KSampler"
+      }
+    },
+    "92": {
+      "inputs": {
+        "seed": 620011356173381,
+        "steps": 1,
+        "cfg": 8,
+        "sampler_name": "euler",
+        "scheduler": "normal",
+        "denoise": 1,
+        "model": [
+          "81",
+          0
+        ],
+        "positive": [
+          "95",
+          0
+        ],
+        "negative": [
+          "96",
+          0
+        ],
+        "latent_image": [
+          "101",
+          0
+        ]
+      },
+      "class_type": "KSampler",
+      "_meta": {
+        "title": "KSampler"
+      }
+    },
+    "94": {
+      "inputs": {
+        "seed": 57781104307404,
+        "steps": 1,
+        "cfg": 8,
+        "sampler_name": "euler",
+        "scheduler": "normal",
+        "denoise": 1,
+        "model": [
+          "83",
+          0
+        ],
+        "positive": [
+          "95",
+          0
+        ],
+        "negative": [
+          "96",
+          0
+        ],
+        "latent_image": [
+          "101",
+          0
+        ]
+      },
+      "class_type": "KSampler",
+      "_meta": {
+        "title": "KSampler"
+      }
+    },
+    "95": {
+      "inputs": {
+        "text": "warmup",
+        "clip": [
+          "75",
+          1
+        ]
+      },
+      "class_type": "CLIPTextEncode",
+      "_meta": {
+        "title": "CLIP Text Encode (Prompt)"
+      }
+    },
+    "96": {
+      "inputs": {
+        "text": "",
+        "clip": [
+          "75",
+          1
+        ]
+      },
+      "class_type": "CLIPTextEncode",
+      "_meta": {
+        "title": "CLIP Text Encode (Prompt)"
+      }
+    },
+    "101": {
+      "inputs": {
+        "width": 512,
+        "height": 512,
+        "batch_size": 1
+      },
+      "class_type": "EmptyLatentImage",
+      "_meta": {
+        "title": "Empty Latent Image"
+      }
+    },
+    "103": {
+      "inputs": {
+        "samples": [
+          "91",
+          0
+        ],
+        "vae": [
+          "75",
+          2
+        ]
+      },
+      "class_type": "VAEDecode",
+      "_meta": {
+        "title": "VAE Decode"
+      }
+    },
+    "104": {
+      "inputs": {
+        "samples": [
+          "92",
+          0
+        ],
+        "vae": [
+          "75",
+          2
+        ]
+      },
+      "class_type": "VAEDecode",
+      "_meta": {
+        "title": "VAE Decode"
+      }
+    },
+    "106": {
+      "inputs": {
+        "samples": [
+          "94",
+          0
+        ],
+        "vae": [
+          "75",
+          2
+        ]
+      },
+      "class_type": "VAEDecode",
+      "_meta": {
+        "title": "VAE Decode"
+      }
+    },
+    "107": {
+      "inputs": {
+        "images": [
+          "106",
+          0
+        ]
+      },
+      "class_type": "PreviewImage",
+      "_meta": {
+        "title": "Preview Image"
+      }
+    },
+    "109": {
+      "inputs": {
+        "images": [
+          "104",
+          0
+        ]
+      },
+      "class_type": "PreviewImage",
+      "_meta": {
+        "title": "Preview Image"
+      }
+    },
+    "110": {
+      "inputs": {
+        "images": [
+          "103",
+          0
+        ]
+      },
+      "class_type": "PreviewImage",
+      "_meta": {
+        "title": "Preview Image"
+      }
+    }
+  }

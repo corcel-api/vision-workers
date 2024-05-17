@@ -5,9 +5,9 @@ import traceback
 from typing import Callable
 from functools import wraps
 from starlette.responses import PlainTextResponse
+import os
 
 app = FastAPI()
-
 
 def handle_request_errors(func: Callable):
     @wraps(func)

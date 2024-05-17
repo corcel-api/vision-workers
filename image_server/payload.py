@@ -11,8 +11,12 @@ from base_model import (
 from typing import Dict, Any, Tuple, List
 from utils.base64_utils import base64_to_image
 import os
+from PIL import Image
 import copy
 import random
+import uuid
+import os
+
 
 
 def _extract_positive_and_negative_prompts(
@@ -29,6 +33,19 @@ def _extract_positive_and_negative_prompts(
             negative_prompt += " " + prompt["text"]
 
     return positive_prompt.strip(), negative_prompt.strip()
+
+def _save_image_and_return_uuid(
+    pil_image: Image.Image
+) -> str:
+    image_id = uuid.uuid4()
+    pil_image.save(f"{cst.COMFY_INPUT_PATH}{image_id}.png")
+    return image_id
+
+def _highvram_mode() -> bool:
+    high_modes = ["--highvram", "--gpu-only"]
+    if os.getenv("VRAM_MODE") in high_modes:
+        return True
+    return False
 
 
 class PayloadModifier:
@@ -51,9 +68,9 @@ class PayloadModifier:
     def modify_inpaint(self, input_data: InpaintingBase) -> Dict[str, Any]:
         payload = copy.deepcopy(self._payloads["inpaint"])
         init_img = base64_to_image(input_data.init_image)
-        init_img.save(f"{cst.COMFY_INPUT_PATH}init.png")
+        img_id = _save_image_and_return_uuid(init_img)
         mask_img = base64_to_image(input_data.mask_image)
-        mask_img.save(f"{cst.COMFY_INPUT_PATH}mask.png")
+        mask_id = _save_image_and_return_uuid(mask_img)
         payload["Sampler"]["inputs"]["steps"] = input_data.steps
         payload["Sampler"]["inputs"]["cfg"] = input_data.cfg_scale
 
@@ -66,13 +83,15 @@ class PayloadModifier:
         seed = input_data.seed
         if seed == 0:
             seed = random.randint(1, 2**16)
+        payload["Image_loader"]["inputs"]["image"] = f"{img_id}.png"
+        payload["Mask_loader"]["inputs"]["image"] = f"{mask_id}.png"
         payload["Sampler"]["inputs"]["noise_seed"] = seed
-        return payload
+        return payload, [img_id, mask_id]
 
     def modify_outpaint(self, input_data: OutpaintingBase) -> Dict[str, Any]:
         payload = copy.deepcopy(self._payloads["outpaint"])
         init_img = base64_to_image(input_data.init_image)
-        init_img.save(f"{cst.COMFY_INPUT_PATH}init.png")
+        img_id = _save_image_and_return_uuid(init_img)
 
         positive_prompt, negative_prompt = _extract_positive_and_negative_prompts(
             input_data.text_prompts
@@ -89,7 +108,8 @@ class PayloadModifier:
         if seed == 0:
             seed = random.randint(1, 2**16)
         payload["Sampler"]["inputs"]["noise_seed"] = seed
-        return payload
+        payload["Image_loader"]["inputs"]["image"] = f"{img_id}.png"
+        return payload, [img_id]
 
     def modify_txt2img(self, input_data: Txt2ImgBase) -> Dict[str, Any]:
         payload = copy.deepcopy(self._payloads[f"txt2img_{input_data.engine}"])
@@ -113,7 +133,7 @@ class PayloadModifier:
     def modify_img2img(self, input_data: Img2ImgBase) -> Dict[str, Any]:
         payload = copy.deepcopy(self._payloads[f"img2img_{input_data.engine}"])
         init_img = base64_to_image(input_data.init_image)
-        init_img.save(f"{cst.COMFY_INPUT_PATH}init.png")
+        img_id = _save_image_and_return_uuid(init_img)
 
         positive_prompt, negative_prompt = _extract_positive_and_negative_prompts(
             input_data.text_prompts
@@ -128,26 +148,32 @@ class PayloadModifier:
             seed = random.randint(1, 2**16)
         payload["Sampler"]["inputs"]["seed"] = seed
         payload["Sampler"]["inputs"]["denoise"] = 1 - input_data.image_strength
-        return payload
+        payload["Image_loader"]["inputs"]["image"] = f"{img_id}.png"
+        return payload, [img_id]
 
     def modify_upscale(self, input_data: UpscaleBase) -> Dict[str, Any]:
-        payload = copy.deepcopy(self._payloads["upscale"])
+        upscale_mode = "upscale_sampled" if input_data.sampled else "upscale"
+        payload = copy.deepcopy(self._payloads[upscale_mode])
         init_img = base64_to_image(input_data.init_image)
-        init_img.save(f"{cst.COMFY_INPUT_PATH}init.png")
-        return payload
+        img_id = _save_image_and_return_uuid(init_img)
+        payload["Image_loader"]["inputs"]["image"] = f"{img_id}.png"
+        return payload, [img_id]
 
     def modify_avatar(self, input_data: AvatarBase) -> Dict[str, Any]:
-        payload = copy.deepcopy(self._payloads["instantid"])
+        avatar_mode = "instantid_highvram" if _highvram_mode() else "instantid"
+        payload = copy.deepcopy(self._payloads[avatar_mode])
         init_img = base64_to_image(input_data.init_image)
-        init_img.save(f"{cst.COMFY_INPUT_PATH}init.png")
+        img_id = _save_image_and_return_uuid(init_img)
 
         positive_prompt, negative_prompt = _extract_positive_and_negative_prompts(
             input_data.text_prompts
         )
-        payload["Prompt"]["inputs"]["text"] += positive_prompt
+        payload["Prompt"]["inputs"]["text"] = positive_prompt
+        payload["Prompt_initial"]["inputs"]["text"] += positive_prompt
         payload["Negative_prompt"]["inputs"]["text"] += negative_prompt
 
         payload["Sampler"]["inputs"]["steps"] = input_data.steps
+        payload["Sampler_initial"]["inputs"]["steps"] = input_data.steps - 5
         seed = input_data.seed
         if seed == 0:
             seed = random.randint(1, 2**16)
@@ -157,4 +183,5 @@ class PayloadModifier:
         payload["Latent"]["inputs"]["height"] = input_data.height
         payload["InstantID"]["inputs"]["ip_weight"] = input_data.ipadapter_strength
         payload["InstantID"]["inputs"]["cn_strength"] = input_data.control_strength
-        return payload
+        payload["Image_loader"]["inputs"]["image"] = f"{img_id}.png"
+        return payload, [img_id]
