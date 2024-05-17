@@ -2,7 +2,7 @@ from typing import AsyncGenerator, List
 
 
 from vllm import SamplingParams
-from vllm.model_executor.utils import set_random_seed
+from vllm.model_executor.utils import set_random_seed, ContextLimitError, prompt_size
 from app import models
 from app.models import Message, Role
 import json
@@ -147,6 +147,14 @@ async def complete_vllm(
         end_of_string_token
     ):
         formatted_prompt = formatted_prompt.rstrip()[: -len(end_of_string_token)]
+
+    context_limit = engine.engine.tokenizer.model_max_length
+    current_length = prompt_size(formatted_prompt, engine.engine.tokenizer)
+    if current_length > context_limit:
+        raise ContextLimitError(
+                message=f"This model's maximum context length is {context_limit} tokens. However, your messages resulted in {current_length} tokens. Please reduce the length of the messages.",
+                type='invalid_request_error'
+            )
 
     set_random_seed(seed)
     sampling_params = SamplingParams(

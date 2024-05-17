@@ -27,3 +27,14 @@ def determine_needs_await(cuda_version: str) -> bool:
     return True
     return float(cuda_version) < 12.1
 
+class ContextLimitError(Exception):
+    def __init__(self, message, type, param=None, code=None):
+        self.message = message
+        self.type = type
+        self.param = param
+        self.code = code
+        super().__init__(self.message)
+
+def prompt_size(formatted_prompt, tokenizer):
+    return len(tokenizer.tokenize(formatted_prompt))
+    
