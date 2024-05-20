@@ -1,4 +1,6 @@
 import gc
+import os
+from time import sleep
 
 import torch
 from vllm.distributed.parallel_state import destroy_model_parallel
@@ -31,7 +33,15 @@ class EngineState:
                 return
             old_model_name = self.llm_engine.model_name
             try:
+                os.environ["TOKENIZERS_PARALLELISM"] = "false"
                 destroy_model_parallel()
+                torch.cuda.empty_cache()
+                torch.distributed.destroy_process_group()
+                del self.llm_engine.model.engine.model_executor
+                del self.llm_engine.model
+                del self.llm_engine
+                gc.collect()
+                sleep(2)
                 logging.info(f"Unloaded model {old_model_name} ✅")
             except Exception:
                 logging.debug(
