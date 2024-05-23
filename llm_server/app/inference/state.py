@@ -1,5 +1,6 @@
 import gc
 import torch
+import asyncio
 import multiprocessing
 from vllm.distributed.parallel_state import destroy_model_parallel
 from app.logging import logging
@@ -17,8 +18,32 @@ class EngineState:
         if self.toxic_checker is None:
             self.toxic_checker = toxic.get_toxic_chat_identifier()
 
-    def _destroy_model(self):
+    async def load_model_and_tokenizer(
+        self,
+        model_to_load: str,
+        revision: str,
+        tokenizer_name: str,
+        half_precision: bool,
+        force_reload: bool,
+    ) -> None:
         if self.llm_engine is not None:
+            if model_to_load == self.llm_engine.model_name and not force_reload:
+                logging.info(f"Model {model_to_load} already loaded")
+                return
+
+            await self._unload_model()
+
+        await self._load_engine(model_to_load, revision, tokenizer_name, half_precision)
+
+    async def _unload_model(self) -> None:
+        if self.model_process is not None:
+            self.model_process.terminate()
+            self.model_process.join()
+            logging.info(f"Terminated previous model loading process")
+
+        if self.llm_engine is not None:
+            old_model_name = self.llm_engine.model_name
+
             destroy_model_parallel()
             torch.distributed.destroy_process_group()
 
@@ -41,32 +66,26 @@ class EngineState:
                 torch.cuda.empty_cache()
                 torch.cuda.ipc_collect()
 
-    def _load_model_process(self, model_to_load, revision, tokenizer_name, half_precision):
-        self._destroy_model()
-        self.llm_engine = engines.get_llm_engine(
-            model_to_load, revision, tokenizer_name, half_precision
-        )
+            logging.info(f"Unloaded model {old_model_name} ✅")
 
-    def load_model_and_tokenizer(
-        self,
-        model_to_load: str,
-        revision: str,
-        tokenizer_name: str,
-        half_precision: bool,
-        force_reload: bool,
+    async def _load_engine(
+        self, model_name: str, revision: str, tokenizer_name: str, half_precision: bool
     ) -> None:
-        if self.model_process is not None:
-            self.model_process.terminate()
-            self.model_process.join()
-            logging.info(f"Terminated previous model loading process")
-
+        loop = asyncio.get_event_loop()
         self.model_process = multiprocessing.Process(
             target=self._load_model_process,
-            args=(model_to_load, revision, tokenizer_name, half_precision)
+            args=(model_name, revision, tokenizer_name, half_precision)
         )
         self.model_process.start()
         self.model_process.join()
-        logging.info(f"Loaded new model {model_to_load} ✅")
+        logging.info(f"Loaded new model {model_name} ✅")
+
+    def _load_model_process(self, model_name: str, revision: str, tokenizer_name: str, half_precision: bool) -> None:
+        gc.collect()
+        torch.cuda.empty_cache()
+        self.llm_engine = asyncio.run(engines.get_llm_engine(
+            model_name, revision, tokenizer_name, half_precision
+        ))
 
     # TODO: rename question & why is this needed?!
     async def grab_the_right_prompt(engine: models.LLMEngine, question: str):
