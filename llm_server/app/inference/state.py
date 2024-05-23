@@ -13,6 +13,7 @@ class EngineState:
         self.llm_engine: Optional[models.LLMEngine] = None
         self.toxic_checker: Optional[models.ToxicEngine] = None
         self.model_process: Optional[multiprocessing.Process] = None
+        self.model_queue: multiprocessing.Queue = multiprocessing.Queue()
 
     def load_toxic_checker(self) -> None:
         if self.toxic_checker is None:
@@ -74,18 +75,22 @@ class EngineState:
         loop = asyncio.get_event_loop()
         self.model_process = multiprocessing.Process(
             target=self._load_model_process,
-            args=(model_name, revision, tokenizer_name, half_precision)
+            args=(model_name, revision, tokenizer_name, half_precision, self.model_queue)
         )
         self.model_process.start()
         self.model_process.join()
+
+        # Retrieve the loaded model from the queue
+        self.llm_engine = self.model_queue.get()
         logging.info(f"Loaded new model {model_name} ✅")
 
-    def _load_model_process(self, model_name: str, revision: str, tokenizer_name: str, half_precision: bool) -> None:
+    def _load_model_process(self, model_name: str, revision: str, tokenizer_name: str, half_precision: bool, queue: multiprocessing.Queue) -> None:
         gc.collect()
         torch.cuda.empty_cache()
-        self.llm_engine = asyncio.run(engines.get_llm_engine(
+        llm_engine = asyncio.run(engines.get_llm_engine(
             model_name, revision, tokenizer_name, half_precision
         ))
+        queue.put(llm_engine)
 
     # TODO: rename question & why is this needed?!
     async def grab_the_right_prompt(engine: models.LLMEngine, question: str):
