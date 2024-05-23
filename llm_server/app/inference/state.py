@@ -8,7 +8,40 @@ from app.logging import logging
 from app import models
 from app.inference import engines, completions, toxic
 from typing import Optional
+import subprocess
 
+
+def clear_gpu_memory():
+    logging.info('Clearing cuda objects from gc')
+    for obj in gc.get_objects():
+        try:
+            if torch.is_tensor(obj):
+                if obj.is_cuda:
+                    del obj
+            elif hasattr(obj, 'data') and torch.is_tensor(obj.data):
+                if obj.data.is_cuda:
+                    del obj
+        except Exception as e:
+            print(f"Error while clearing object: {e}")
+    gc.collect()    
+    torch.cuda.empty_cache()
+
+def restart_nvidia_driver():
+    commands = [
+        "sudo rmmod nvidia_uvm",
+        "sudo rmmod nvidia",
+        "sudo modprobe nvidia",
+        "sudo modprobe nvidia_uvm"
+    ]
+    logging.info('Restarting cuda drivers to make sure GPU memory is freed')
+    for cmd in commands:
+        try:
+            result = subprocess.run(cmd, shell=True, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            print(result.stdout.decode())
+            if result.stderr:
+                print(result.stderr.decode())
+        except subprocess.CalledProcessError as e:
+            print(f"Error running command '{cmd}': {e.stderr.decode()}")
 
 class EngineState:
     def __init__(self):
@@ -33,7 +66,6 @@ class EngineState:
                 return
             old_model_name = self.llm_engine.model_name
             # unloading & clearing cache
-            os.environ["TOKENIZERS_PARALLELISM"] = "false"
             destroy_model_parallel()
             torch.distributed.destroy_process_group()
             del self.llm_engine.model.engine.model_executor 
@@ -42,20 +74,9 @@ class EngineState:
             del self.llm_engine.model
             del self.llm_engine
             self.llm_engine = None
-            # Delete all references to GPU tensors
-            for obj in gc.get_objects():
-                try:
-                    if torch.is_tensor(obj):
-                        if obj.is_cuda:
-                            del obj
-                    elif hasattr(obj, 'data') and torch.is_tensor(obj.data):
-                        if obj.data.is_cuda:
-                            del obj
-                except Exception as e:
-                    print(f"Error while clearing object: {e}")
+            clear_gpu_memory()
             gc.collect()
-            torch.cuda.empty_cache()
-            sleep(2)
+            restart_nvidia_driver()
             logging.info(f"Unloaded model {old_model_name} ✅")
 
         await self._load_engine(model_to_load, revision, tokenizer_name, half_precision)
