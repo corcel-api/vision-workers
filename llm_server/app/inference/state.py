@@ -13,9 +13,8 @@ class EngineState:
         self.llm_engine: Optional[models.LLMEngine] = None
         self.toxic_checker: Optional[models.ToxicEngine] = None
         self.model_process: Optional[multiprocessing.Process] = None
-        self.manager = multiprocessing.Manager()
-        self.model_ready = self.manager.Event()
-        self.shared_state = self.manager.dict()
+        self.parent_conn, self.child_conn = multiprocessing.Pipe()
+        self.model_ready = multiprocessing.Event()
 
     def load_toxic_checker(self) -> None:
         if self.toxic_checker is None:
@@ -77,23 +76,22 @@ class EngineState:
         self.model_ready.clear()
         self.model_process = multiprocessing.Process(
             target=self._load_model_process,
-            args=(model_name, revision, tokenizer_name, half_precision, self.model_ready, self.shared_state)
+            args=(model_name, revision, tokenizer_name, half_precision, self.child_conn, self.model_ready)
         )
         self.model_process.start()
-        self.model_process.join()
 
         # Wait until the model is loaded
         self.model_ready.wait()
-        self.llm_engine = self.shared_state['llm_engine']
+        self.llm_engine = self.parent_conn.recv()
         logging.info(f"Loaded new model {model_name} ✅")
 
-    def _load_model_process(self, model_name: str, revision: str, tokenizer_name: str, half_precision: bool, model_ready: multiprocessing.Event, shared_state: dict) -> None:
+    def _load_model_process(self, model_name: str, revision: str, tokenizer_name: str, half_precision: bool, conn: multiprocessing.Connection, model_ready: multiprocessing.Event) -> None:
         gc.collect()
         torch.cuda.empty_cache()
         llm_engine = asyncio.run(engines.get_llm_engine(
             model_name, revision, tokenizer_name, half_precision
         ))
-        shared_state['llm_engine'] = llm_engine
+        conn.send(llm_engine)
         model_ready.set()  # Signal that the model is loaded
 
     # TODO: rename question & why is this needed?!
