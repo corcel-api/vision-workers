@@ -1,6 +1,4 @@
 import gc
-import os
-from time import sleep
 
 import torch
 from vllm.distributed.parallel_state import destroy_model_parallel
@@ -8,23 +6,6 @@ from app.logging import logging
 from app import models
 from app.inference import engines, completions, toxic
 from typing import Optional
-import subprocess
-
-
-def clear_gpu_memory():
-    logging.info('Clearing cuda objects from gc')
-    for obj in gc.get_objects():
-        try:
-            if torch.is_tensor(obj):
-                if obj.is_cuda:
-                    del obj
-            elif hasattr(obj, 'data') and torch.is_tensor(obj.data):
-                if obj.data.is_cuda:
-                    del obj
-        except Exception as e:
-            pass 
-    torch.cuda.empty_cache()
-    gc.collect()
     
 
 class EngineState:
@@ -49,17 +30,30 @@ class EngineState:
                 logging.info(f"Model {model_to_load} already loaded")
                 return
             old_model_name = self.llm_engine.model_name
-            # unloading & clearing cache
+
             destroy_model_parallel()
             torch.distributed.destroy_process_group()
-            del self.llm_engine.model.engine.model_executor 
-            del self.llm_engine.model.engine.tokenizer
-            del self.llm_engine.tokenizer
-            del self.llm_engine.model
+
+            if hasattr(self.llm_engine.model.engine, 'model_executor'):
+                del self.llm_engine.model.engine.model_executor
+            if hasattr(self.llm_engine.model.engine, 'tokenizer'):
+                del self.llm_engine.model.engine.tokenizer
+            if hasattr(self.llm_engine, 'tokenizer'):
+                del self.llm_engine.tokenizer
+            if hasattr(self.llm_engine, 'model'):
+                del self.llm_engine.model
             del self.llm_engine
             self.llm_engine = None
+
             gc.collect()
-            clear_gpu_memory()
+            torch.cuda.empty_cache()
+
+            # additional steps to ensure memory is freed
+            if torch.cuda.is_available():
+                torch.cuda.synchronize()
+                torch.cuda.empty_cache()
+                torch.cuda.ipc_collect()
+
             logging.info(f"Unloaded model {old_model_name} ✅")
 
         await self._load_engine(model_to_load, revision, tokenizer_name, half_precision)
