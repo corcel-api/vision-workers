@@ -15,6 +15,7 @@ class EngineState:
         self.model_process: Optional[multiprocessing.Process] = None
         self.manager = multiprocessing.Manager()
         self.model_ready = self.manager.Event()
+        self.model_holder = self.manager.Namespace()
 
     def load_toxic_checker(self) -> None:
         if self.toxic_checker is None:
@@ -76,20 +77,20 @@ class EngineState:
         self.model_ready.clear()
         self.model_process = multiprocessing.Process(
             target=self._load_model_process,
-            args=(model_name, revision, tokenizer_name, half_precision, self.model_ready)
+            args=(model_name, revision, tokenizer_name, half_precision, self.model_ready, self.model_holder)
         )
         self.model_process.start()
         self.model_process.join()
 
         # Wait until the model is loaded
         self.model_ready.wait()
-        self.llm_engine = True  # Indicate that the model is ready
+        self.llm_engine = self.model_holder.llm_engine
         logging.info(f"Loaded new model {model_name} ✅")
 
-    def _load_model_process(self, model_name: str, revision: str, tokenizer_name: str, half_precision: bool, model_ready: multiprocessing.Event) -> None:
+    def _load_model_process(self, model_name: str, revision: str, tokenizer_name: str, half_precision: bool, model_ready: multiprocessing.Event, model_holder: multiprocessing.Namespace) -> None:
         gc.collect()
         torch.cuda.empty_cache()
-        self.llm_engine = asyncio.run(engines.get_llm_engine(
+        model_holder.llm_engine = asyncio.run(engines.get_llm_engine(
             model_name, revision, tokenizer_name, half_precision
         ))
         model_ready.set()  # Signal that the model is loaded
