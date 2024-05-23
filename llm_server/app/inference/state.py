@@ -32,23 +32,24 @@ class EngineState:
                 logging.info(f"Model {model_to_load} already loaded")
                 return
             old_model_name = self.llm_engine.model_name
-            try:
-                os.environ["TOKENIZERS_PARALLELISM"] = "false"
-                destroy_model_parallel()
-                torch.cuda.empty_cache()
-                torch.distributed.destroy_process_group()
-                del self.llm_engine.model.engine.model_executor
-                del self.llm_engine.model
-                del self.llm_engine
-                gc.collect()
-                sleep(2)
-                logging.info(f"Unloaded model {old_model_name} ✅")
-            except Exception:
-                logging.debug(
-                    "Tried to unload a vllm model & failed - probably wasn't a vllm model"
-                )
-
+            # unloading & clearing cache
+            os.environ["TOKENIZERS_PARALLELISM"] = "false"
+            destroy_model_parallel()
+            torch.distributed.destroy_process_group()
+            del self.llm_engine.model.engine.model_executor 
+            del self.llm_engine.model.llm_engine.driver_worker
+            del self.llm_engine.model
+            del self.llm_engine
             self.llm_engine = None
+            # Delete all references to GPU tensors
+            for obj in gc.get_objects():
+                if torch.is_tensor(obj) or (hasattr(obj, 'data') and torch.is_tensor(obj.data)):
+                    if obj.is_cuda:
+                        del obj
+            gc.collect()
+            torch.cuda.empty_cache()
+            sleep(2)
+            logging.info(f"Unloaded model {old_model_name} ✅")
 
         await self._load_engine(model_to_load, revision, tokenizer_name, half_precision)
 
