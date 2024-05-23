@@ -24,6 +24,8 @@ def clear_gpu_memory():
         except Exception as e:
             pass 
     torch.cuda.empty_cache()
+    gc.collect()
+    
 
 class EngineState:
     def __init__(self):
@@ -50,7 +52,6 @@ class EngineState:
             # unloading & clearing cache
             destroy_model_parallel()
             torch.distributed.destroy_process_group()
-            self.llm_engine.model.engine.cpu()
             del self.llm_engine.model.engine.model_executor 
             del self.llm_engine.model.engine.tokenizer
             del self.llm_engine.tokenizer
