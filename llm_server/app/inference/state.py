@@ -44,9 +44,15 @@ class EngineState:
             self.llm_engine = None
             # Delete all references to GPU tensors
             for obj in gc.get_objects():
-                if torch.is_tensor(obj) or (hasattr(obj, 'data') and torch.is_tensor(obj.data)):
-                    if obj.is_cuda:
-                        del obj
+                try:
+                    if torch.is_tensor(obj):
+                        if obj.is_cuda:
+                            del obj
+                    elif hasattr(obj, 'data') and torch.is_tensor(obj.data):
+                        if obj.data.is_cuda:
+                            del obj
+                except Exception as e:
+                    print(f"Error while clearing object: {e}")
             gc.collect()
             torch.cuda.empty_cache()
             sleep(2)
