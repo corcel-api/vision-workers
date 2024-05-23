@@ -37,7 +37,9 @@ class EngineState:
             destroy_model_parallel()
             torch.distributed.destroy_process_group()
             del self.llm_engine.model.engine.model_executor 
-            del self.llm_engine.model.llm_engine.driver_worker
+            del self.llm_engine.model.engine.driver_worker
+            del self.llm_engine.model.engine.tokenizer
+            del self.llm_engine.tokenizer
             del self.llm_engine.model
             del self.llm_engine
             self.llm_engine = None
