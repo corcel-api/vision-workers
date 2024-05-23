@@ -13,7 +13,8 @@ class EngineState:
         self.llm_engine: Optional[models.LLMEngine] = None
         self.toxic_checker: Optional[models.ToxicEngine] = None
         self.model_process: Optional[multiprocessing.Process] = None
-        self.model_queue: multiprocessing.Queue = multiprocessing.Queue()
+        self.manager = multiprocessing.Manager()
+        self.model_ready = self.manager.Event()
 
     def load_toxic_checker(self) -> None:
         if self.toxic_checker is None:
@@ -72,25 +73,26 @@ class EngineState:
     async def _load_engine(
         self, model_name: str, revision: str, tokenizer_name: str, half_precision: bool
     ) -> None:
-        loop = asyncio.get_event_loop()
+        self.model_ready.clear()
         self.model_process = multiprocessing.Process(
             target=self._load_model_process,
-            args=(model_name, revision, tokenizer_name, half_precision, self.model_queue)
+            args=(model_name, revision, tokenizer_name, half_precision, self.model_ready)
         )
         self.model_process.start()
         self.model_process.join()
 
-        # Retrieve the loaded model from the queue
-        self.llm_engine = self.model_queue.get()
+        # Wait until the model is loaded
+        self.model_ready.wait()
+        self.llm_engine = True  # Indicate that the model is ready
         logging.info(f"Loaded new model {model_name} ✅")
 
-    def _load_model_process(self, model_name: str, revision: str, tokenizer_name: str, half_precision: bool, queue: multiprocessing.Queue) -> None:
+    def _load_model_process(self, model_name: str, revision: str, tokenizer_name: str, half_precision: bool, model_ready: multiprocessing.Event) -> None:
         gc.collect()
         torch.cuda.empty_cache()
-        llm_engine = asyncio.run(engines.get_llm_engine(
+        self.llm_engine = asyncio.run(engines.get_llm_engine(
             model_name, revision, tokenizer_name, half_precision
         ))
-        queue.put(llm_engine)
+        model_ready.set()  # Signal that the model is loaded
 
     # TODO: rename question & why is this needed?!
     async def grab_the_right_prompt(engine: models.LLMEngine, question: str):
