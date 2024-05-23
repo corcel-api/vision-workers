@@ -48,8 +48,6 @@ class EngineState:
                     "Tried to unload a vllm model & failed - probably wasn't a vllm model"
                 )
 
-            del self.llm_engine.model
-            del self.llm_engine
             self.llm_engine = None
 
         await self._load_engine(model_to_load, revision, tokenizer_name, half_precision)
