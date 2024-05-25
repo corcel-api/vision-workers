@@ -26,7 +26,6 @@ class CancelledErrorFilter:
                 return False
         return True
 logging.add(lambda msg: None, filter=CancelledErrorFilter())
-# Set the start method to 'spawn'
 multiprocessing.set_start_method('spawn', force=True)
 
 class EngineState:
@@ -90,7 +89,7 @@ class EngineState:
 
         logging.add(lambda msg: None, filter=CancelledErrorFilter())
         app = FastAPI()
-        engine_holder = {}  # Use a dictionary to hold the engine
+        engine_holder = {} 
 
         @app.post("/generate")
         async def generate_text(request: RequestInfo):
@@ -112,7 +111,7 @@ class EngineState:
             llm_engine = await engines.get_llm_engine(
                 model_name, revision, tokenizer_name, half_precision
             )
-            engine_holder['engine'] = llm_engine  # Store the engine in the dictionary
+            engine_holder['engine'] = llm_engine
             model_ready.set()
 
         asyncio.run(load_model())
@@ -121,7 +120,7 @@ class EngineState:
     async def forward_request(self, request_info: models.RequestInfo):
         async with httpx.AsyncClient() as client:
             async with client.stream("POST", "http://localhost:6910/generate", json=request_info.dict()) as response:
-                response.raise_for_status()  # Raise an error for bad responses
+                response.raise_for_status()
                 async for line in response.aiter_lines():
                     if line:
                         yield line
