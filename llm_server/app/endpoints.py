@@ -25,9 +25,9 @@ async def generate_text(
     request: schemas.TextRequestModel,
     EngineState: EngineState = fastapi.Depends(dependencies.get_engine_state),
 ):
-    if not EngineState.llm_engine_loaded:
+    if not EngineState.model_loaded:
         return Response(
-            content='{"error": "No model have been loaded, please use the load_model endpoint to load a model"}',
+            content='{"error": "No model has been loaded, please use the load_model endpoint to load a model"}',
             status_code=status.HTTP_400_BAD_REQUEST,
             media_type="application/json",
         )

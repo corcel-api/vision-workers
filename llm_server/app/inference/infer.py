@@ -1,8 +1,9 @@
 from app import schemas
 from typing import List
 from app import models
-from app.inference import toxic, completions
-from app.inference.state import EngineState  # Import EngineState from state.py
+from app.inference import toxic
+from app.inference.state import EngineState
+import json
 
 async def _get_last_message_content(messages: List[models.Message]):
     if len(messages) == 0:
@@ -12,7 +13,7 @@ async def _get_last_message_content(messages: List[models.Message]):
 
 async def infer(
     request: schemas.TextRequestModel,
-    engine_state: EngineState,  # Using EngineState from state.py
+    engine_state: EngineState,  
     toxic_engine: models.ToxicEngine,
 ):
     last_message_content = await _get_last_message_content(request.messages)
@@ -21,9 +22,12 @@ async def infer(
             " "
         ):
             yield o + " "
-        pass
     else:
-        # Send the request to the model process and wait for the response
-        engine_state.parent_conn.send({'command': 'generate', 'request_info': request})
-        response = engine_state.parent_conn.recv()
-        yield response
+        # Forward the request to the model process and stream the response back
+        request_info = models.RequestInfo(**request.dict())
+        response_stream = engine_state.forward_request(request_info)
+        async for line in response_stream:
+            if line:
+                chunk = json.loads(line).get("text", "")
+                yield chunk
+
