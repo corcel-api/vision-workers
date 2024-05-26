@@ -5,6 +5,8 @@ import multiprocessing
 
 import torch
 
+from lmdeploy import pipeline, TurbomindEngineConfig
+
 from app.logging import logging
 from app import models
 from app.inference import engines, completions
@@ -35,6 +37,7 @@ class EngineState:
         self.model_loaded = False
         self.toxic_checker: Optional[models.ToxicEngine] = None
         self.model_process: Optional[multiprocessing.Process] = None
+        self.lmdeploy_models = ['internlm/internlm-xcomposer2-4khd-7b']
 
     def load_toxic_checker(self) -> None:
         if self.toxic_checker is None:
@@ -96,6 +99,16 @@ class EngineState:
             try:
                 logging.info(f"Received request: {request.json()}")
                 llm_engine = engine_holder['engine']
+                
+                if model_name in self.lmdeploy_models:
+                    async def stream_response():
+                        async for chunk in completions.complete_lmdeploy(engine_holder['engine'], request):
+                            yield f"{json.dumps({'text': chunk})}\n"
+                else:
+                    async def stream_response():
+                        async for chunk in completions.complete_vllm(engine_holder['engine'], request):
+                            yield f"{json.dumps({'text': chunk})}\n"
+
                 async def stream_response():
                     async for chunk in completions.complete_vllm(llm_engine, request):
                         yield f"{json.dumps({'text': chunk})}\n"
@@ -108,9 +121,12 @@ class EngineState:
         async def load_model():
             gc.collect()
             torch.cuda.empty_cache()
-            llm_engine = await engines.get_llm_engine(
-                model_name, revision, tokenizer_name, half_precision
-            )
+            if model_name in self.lmdeploy_models:
+                llm_engine = pipeline(model_name, backend_config=TurbomindEngineConfig(session_len=8192))
+            else:
+                llm_engine = await engines.get_llm_engine(
+                    model_name, revision, tokenizer_name, half_precision
+                )
             engine_holder['engine'] = llm_engine
             model_ready.set()
 

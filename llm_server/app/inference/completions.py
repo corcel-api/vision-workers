@@ -164,3 +164,26 @@ async def complete_vllm(
         cursor = len(text)
         logprobs_cursor = len(log_probs)
     yield "data: [DONE]\n\n"
+
+
+async def complete_lmdeploy(engine: Any, request_info: models.RequestInfo) -> AsyncGenerator[str, None]:
+    from lmdeploy.vl import load_image
+
+    messages = request_info.messages
+    prompts = []
+
+    for message in messages:
+        content_list = []
+        for content in message.content:
+            if content["type"] == "text":
+                content_list.append({'type': 'text', 'text': content["text"]})
+            elif content["type"] == "image_url":
+                content_list.append({'type': 'image_url', 'image_url': {'url': content["image_url"]["url"]}})
+        
+        prompts.append({'role': message.role, 'content': content_list})
+
+    # Instead of a single call, use stream_infer
+    async for item in engine.stream_infer(prompts):
+        data = json.dumps({"text": item})
+        yield f"data: {data}\n\n"
+    yield "data: [DONE]\n\n"
