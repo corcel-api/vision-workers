@@ -6,6 +6,8 @@ from app.models import Message, Role
 import json
 from app.logging import logging
 from typing import Any
+from lmdeploy.messages import GenerationConfig
+import uuid
 
 SYSTEM_PROMPT_PREFIX = "Instructions to follow for all following messages: "
 
@@ -182,8 +184,50 @@ async def complete_lmdeploy(engine: Any, request_info: models.RequestInfo) -> As
         
         prompts.append({'role': message.role, 'content': content_list})
 
-    # Instead of a single call, use stream_infer
-    async for item in engine.stream_infer(prompts):
-        data = json.dumps({"text": item})
+    gen_config = GenerationConfig(
+        max_new_tokens=getattr(request_info, 'max_tokens', 100),  
+        logprobs=getattr(request_info, 'logprobs', None),  
+        top_k=getattr(request_info, 'top_k', 50),  
+        top_p=getattr(request_info, 'top_p', 0.95), 
+        temperature=getattr(request_info, 'temperature', 1.0), 
+        repetition_penalty=getattr(request_info, 'repetition_penalty', 1.0), 
+        ignore_eos=getattr(request_info, 'ignore_eos', False),  
+        stop_words=getattr(request_info, 'stop', None), 
+        skip_special_tokens=getattr(request_info, 'skip_special_tokens', True)
+    )
+
+    async_generator = engine.generate(
+            prompts,
+            str(uuid.uuid4()),
+            gen_config=gen_config,
+            stream_response=True,  # always use stream to enable batching
+            sequence_start=True,
+            sequence_end=True,
+            do_preprocess=not isinstance(prompts, str) # text completion for string input
+        )
+
+    cursor = 0
+    logprobs_cursor = 0
+    number_of_logprobs = request_info.number_of_logprobs
+    async for res in async_generator:
+        text = res.response
+        latest_chunk = text[cursor:]
+
+        log_probs = res.logprobs
+        log_probs_dict = [
+            {
+                "index": idx,
+                "logprob": token_detail.logprob,
+                "decoded": token_detail.decoded_token,
+            }
+            for token_details in log_probs[logprobs_cursor:]
+            for idx, token_detail in token_details.items()
+        ]
+        data = json.dumps(
+            {"text": latest_chunk, "logprobs": log_probs_dict[:number_of_logprobs]}
+        )
         yield f"data: {data}\n\n"
+
+        cursor = len(text)
+        logprobs_cursor = len(log_probs)
     yield "data: [DONE]\n\n"

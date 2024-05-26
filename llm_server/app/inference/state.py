@@ -6,6 +6,7 @@ import multiprocessing
 import torch
 
 from lmdeploy import pipeline, TurbomindEngineConfig
+from lmdeploy.serve import vl_async_engine
 
 from app.logging import logging
 from app import models
@@ -122,7 +123,7 @@ class EngineState:
             gc.collect()
             torch.cuda.empty_cache()
             if model_name in self.lmdeploy_models:
-                llm_engine = pipeline(model_name, backend_config=TurbomindEngineConfig(session_len=8192))
+                llm_engine = vl_async_engine(model_name)
             else:
                 llm_engine = await engines.get_llm_engine(
                     model_name, revision, tokenizer_name, half_precision
