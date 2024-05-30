@@ -30,6 +30,8 @@ RUN pip install --upgrade pip \
     && pip install -r /app/requirements.txt \
     && pip install flash-attn --no-build-isolation
 
+RUN pip install outlines==0.0.41 --no-deps
+
 COPY llm_server/app /app/app
 
 COPY llm_server/entrypoint.sh /app/entrypoint.sh
