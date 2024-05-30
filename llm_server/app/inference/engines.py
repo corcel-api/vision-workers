@@ -24,9 +24,10 @@ async def _get_vllm_engine(
         tokenizer=tokenizer_name,
         dtype=dtype,
         enforce_eager=False,
+        max_model_len=50000,
+        max_logprobs=10,
         revision=revision,
         max_num_seqs=256,
-        max_logprobs=100,
         gpu_memory_utilization=0.80,
         trust_remote_code=True
     )
@@ -35,7 +36,10 @@ async def _get_vllm_engine(
     cuda_version = torch.version.cuda
     if determine_needs_await(cuda_version):
         logging.info(f"Cuda version :  {cuda_version}, awaiting for tokenizer init")
-        tokenizer_obj = await model_instance.get_tokenizer()
+        try:
+            tokenizer_obj = await model_instance.get_tokenizer()
+        except: 
+            tokenizer_obj = model_instance.get_tokenizer()
     else:
         logging.info(f"Cuda version :  {cuda_version}, not awaiting for tokenizer init")
         tokenizer_obj = model_instance.get_tokenizer()
