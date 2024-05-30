@@ -54,6 +54,14 @@ class RequestInfo(BaseModel):
     max_tokens: int = Field(
         4096, title="Max Tokens", description="Max tokens for text generation."
     )
+
+    regex: str = Field(
+        None, title="Regex", description="Regex for text generation, condition the output.")
+
+    json_schema: dict = Field(
+        None, title="JSON Schema", description="JSON Schema for text generation, condition the output."
+    )
+
     number_of_logprobs: int = Field(
         default=1,
         title="Logprobs",

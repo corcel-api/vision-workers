@@ -13,3 +13,4 @@ pymongo==4.6.3
 vllm==0.4.2
 torchvision==0.18.0
 huggingface_hub[hf_transfer]
+outlines==0.0.41

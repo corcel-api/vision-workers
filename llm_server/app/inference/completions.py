@@ -6,6 +6,8 @@ from app.models import Message, Role
 import json
 from app.logging import logging
 from typing import Any
+from outlines.integrations.vllm import JSONLogitsProcessor, RegexLogitsProcessor
+
 
 SYSTEM_PROMPT_PREFIX = "Instructions to follow for all following messages: "
 
@@ -92,6 +94,19 @@ def fix_message_structure_for_prompt(
     logging.debug(f"Processed messages: {processed_messages}")
     return processed_messages
 
+def add_logits_processor(engine: models.LLMEngine, request: models.RequestInfo):
+    json_schema = request.json_schema
+    regex_string = request.regex    
+    print(f"json_schema: {json_schema}")
+    print(f"regex_string: {regex_string}")
+    if json_schema is not None:
+        logits_processors = [JSONLogitsProcessor(json_schema, engine.model.engine)]
+    elif regex_string is not None:
+        logits_processors = [RegexLogitsProcessor(regex_string, engine.model.engine)]
+    else:
+        logits_processors = []
+    return logits_processors
+
 async def complete_vllm(
     engine: models.LLMEngine, request_info: models.RequestInfo
 ) -> AsyncGenerator[str, None]:
@@ -135,6 +150,7 @@ async def complete_vllm(
         seed=seed,
         logprobs=number_of_logprobs,
         top_k=top_k,
+        logits_processors=add_logits_processor(engine, request_info),
     )
     stream = await engine.model.add_request(
         uuid.uuid4().hex, formatted_prompt, sampling_params
@@ -148,14 +164,15 @@ async def complete_vllm(
 
         log_probs = request_output.outputs[0].logprobs
         log_probs_dict = [
-            {
-                "index": idx,
-                "logprob": token_detail.logprob,
-                "decoded": token_detail.decoded_token,
-            }
-            for token_details in log_probs[logprobs_cursor:]
-            for idx, token_detail in token_details.items()
-        ]
+                {
+                    "index": idx,
+                    "logprob": token_detail.logprob,
+                    "decoded": token_detail.decoded_token, 
+                }
+                for token_details in log_probs[logprobs_cursor:]  # Loop over log_probs starting from logprobs_cursor
+                for idx, token_detail in enumerate(token_details)  # Enumerate if token_details is a list
+            ]
+
         data = json.dumps(
             {"text": latest_chunk, "logprobs": log_probs_dict[:number_of_logprobs]}
         )
