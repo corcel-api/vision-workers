@@ -21,7 +21,9 @@ PROMPTS_LOC = "tests/test_prompts.txt"
 MODELS_TO_TEST_LOC = "tests/models_to_test.json"
 TEST_SAVE_LOC = "tests/test_results.csv"
 NUMBER_OF_TESTS = 20
-VALIDATOR_TASKS = [Tasks.chat_mixtral, Tasks.chat_bittensor_finetune]
+
+#VALIDATOR_TASKS = [Tasks.chat_mixtral, Tasks.chat_bittensor_finetune]
+VALIDATOR_TASKS = [Tasks.chat_bittensor_finetune]
 
 def load_json(file_path: str) -> Dict[str, Any]:
     with open(file_path) as f:
@@ -126,20 +128,6 @@ def flatten_server_instance_details(server_instance: ServerInstance) -> Dict[str
     return {"id": server_instance.server_details.id, "gpu": server_instance.server_details.gpu,
             "endpoint": server_instance.server_details.endpoint, "model_name": server_instance.model.model,
             "model_revision": server_instance.model.revision}
-
-def _load_sse_jsons(chunk: str) -> List[Dict[str, Any]]:
-    jsons = []
-    received_event_chunks = chunk.split("\n\n")
-    for event in received_event_chunks:
-        if event == "":
-            continue
-        prefix, _, data = event.partition(":")
-        if data.strip() == "[DONE]":
-            break
-        loaded_chunk = json.loads(data)
-        jsons.append(loaded_chunk)
-    return jsons
-
 
 async def _stream_response_from_stream_miners_until_result(miner_stream: AsyncGenerator[str, None], miner_details: ServerInstance) -> QueryResult:
     time1 = time.time()

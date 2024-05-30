@@ -292,8 +292,9 @@ async def get_chat_data_validator_response(
     """This method is fine as we always have max token is 1"""
     response = await query_endpoint_for_iterator(endpoint, data)
     async for line in response.aiter_lines():
-        line_formatted = line.split("data: ")[1].split("\n\n")[0]
+        line_formatted = line.split("data: ")[1]
         response_json = json.loads(line_formatted)
+        print('Response json', response_json)
         return models.ValidatorCheckingResponse(**response_json)
 
 
@@ -311,13 +312,16 @@ async def calculate_distance_for_token(
         i.decoded: i.logprob for i in validator_checking_response.logprobs
     }
 
+
     if token not in validator_log_probs_for_token:
+        print('Token not there', token, validator_log_probs_for_token)
         return 1.0
     else:
         distance = abs(
             math.exp(validator_log_probs_for_token[token])
             - math.exp(chat_responses[index].logprob)
         )
+        print('Token is there here is the distance ', distance, token, validator_log_probs_for_token, chat_responses[index])
     
     #formatted_validator_logging = "\n".join(
      #    [f"{i.decoded}: {i.logprob}" for i in validator_checking_response.logprobs]

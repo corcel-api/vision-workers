@@ -9,3 +9,4 @@ auto-gptq==0.7.1
 sentence_transformers==2.5.1
 loguru==0.7.2
 pydantic_settings==2.2.1
+outlines==0.0.41

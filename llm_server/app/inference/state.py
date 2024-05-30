@@ -1,7 +1,6 @@
 import gc
 
 import torch
-from vllm.model_executor.parallel_utils.parallel_state import destroy_model_parallel
 from app.logging import logging
 from app import models
 from app.inference import engines, completions, toxic

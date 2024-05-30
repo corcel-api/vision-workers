@@ -8,6 +8,8 @@ from app.models import Message, Role
 import json
 from app.logging import logging
 from typing import Any
+from outlines.integrations.vllm import JSONLogitsProcessor, RegexLogitsProcessor
+
 
 SYSTEM_PROMPT_PREFIX = "Instructions to follow for all following messages: "
 
@@ -110,6 +112,17 @@ def fix_message_structure_for_prompt(
     return processed_messages
 
 
+def add_logits_processor(engine: models.LLMEngine, request: models.IncomingRequest):
+    json_schema = request.schema
+    regex_string = request.regex    
+    if json_schema is not None:
+        logits_processors = [JSONLogitsProcessor(json_schema, engine.model.engine)]
+    elif regex_string is not None:
+        logits_processors = [RegexLogitsProcessor(regex_string, engine.model.engine)]
+    else:
+        logits_processors = []
+    return logits_processors
+
 async def complete_vllm(
     engine: models.LLMEngine, request_info: models.RequestInfo
 ) -> AsyncGenerator[str, None]:
@@ -156,6 +169,7 @@ async def complete_vllm(
         seed=seed,
         logprobs=number_of_logprobs,
         top_k=top_k,
+        logits_processors=add_logits_processor(engine.model, request_info),
     )
     stream = await engine.model.add_request(
         uuid.uuid4().hex, formatted_prompt, sampling_params
