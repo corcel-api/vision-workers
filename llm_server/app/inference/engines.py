@@ -25,10 +25,10 @@ async def _get_vllm_engine(
         dtype=dtype,
         enforce_eager=False,
         max_model_len=50000,
-        max_logprobs=10,
+        max_logprobs=100,
         revision=revision,
         max_num_seqs=256,
-        gpu_memory_utilization=0.80,
+        gpu_memory_utilization=0.85,
         trust_remote_code=True
     )
     model_instance = AsyncLLMEngine.from_engine_args(engine_args)

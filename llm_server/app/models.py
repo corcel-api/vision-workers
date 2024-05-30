@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import Any, Optional, Callable, List
+from typing import Any, Optional, Callable, List, Dict
 import enum
 
 from transformers import AutoTokenizer, AutoModelForSeq2SeqLM, TextIteratorStreamer
@@ -55,13 +55,15 @@ class RequestInfo(BaseModel):
         4096, title="Max Tokens", description="Max tokens for text generation."
     )
 
-    regex: str = Field(
-        None, title="Regex", description="Regex for text generation, condition the output.")
-
-    json_schema: dict = Field(
-        None, title="JSON Schema", description="JSON Schema for text generation, condition the output."
+    regex: Optional[str] = Field(
+        None, title="Regex",
+        description="Regex for text generation, condition the output."
     )
 
+    json_schema: Optional[Dict] = Field(
+        None, title="JSON Schema",
+        description="JSON Schema for text generation, condition the output."
+    )
     number_of_logprobs: int = Field(
         default=1,
         title="Logprobs",

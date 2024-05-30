@@ -97,8 +97,6 @@ def fix_message_structure_for_prompt(
 def add_logits_processor(engine: models.LLMEngine, request: models.RequestInfo):
     json_schema = request.json_schema
     regex_string = request.regex    
-    print(f"json_schema: {json_schema}")
-    print(f"regex_string: {regex_string}")
     if json_schema is not None:
         logits_processors = [JSONLogitsProcessor(json_schema, engine.model.engine)]
     elif regex_string is not None:
@@ -161,16 +159,15 @@ async def complete_vllm(
     async for request_output in stream:
         text = request_output.outputs[0].text
         latest_chunk = text[cursor:]
-
         log_probs = request_output.outputs[0].logprobs
         log_probs_dict = [
                 {
-                    "index": idx,
-                    "logprob": token_detail.logprob,
-                    "decoded": token_detail.decoded_token, 
+                    "index": v.rank,
+                    "logprob": v.logprob,
+                    "decoded": v.decoded_token, 
                 }
-                for token_details in log_probs[logprobs_cursor:]  # Loop over log_probs starting from logprobs_cursor
-                for idx, token_detail in enumerate(token_details)  # Enumerate if token_details is a list
+                for token_details in log_probs[logprobs_cursor:]  
+                for (k,v) in  token_details.items()
             ]
 
         data = json.dumps(
