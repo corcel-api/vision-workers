@@ -100,16 +100,22 @@ import hashlib
 logits_processor_cache = {}
 
 def add_logits_processor(engine: models.LLMEngine, request: models.RequestInfo):
+    logging.info(f"LOGITS PROCESSOR BEING CALLED")
     json_schema = request.json_schema
     regex_string = request.regex
+    logging.info(f"JSON SCHEMA: {json_schema}")
+    logging.info(f"REGEX: {regex_string}")
 
     if json_schema is not None:
         # Generate a hash of the JSON schema
-        json_hash = hashlib.sha256(json_schema.encode()).hexdigest()
+        json_schema_str = json.dumps(json_schema)
+        json_hash = hashlib.sha256(json_schema_str.encode()).hexdigest()
         # Check if the logits processor for the JSON schema already exists in the cache
         if json_hash in logits_processor_cache:
+            logging.info(f"Using cached logits processor for JSON schema: {json_schema}")
             logits_processors = [logits_processor_cache[json_hash]]
         else:
+            logging.info(f"Compiling logits processor for JSON schema: {json_schema}")
             # Compile the logits processor and store it in the cache
             logits_processor = JSONLogitsProcessor(json_schema, engine.model.engine)
             logits_processor_cache[json_hash] = logits_processor
@@ -119,13 +125,16 @@ def add_logits_processor(engine: models.LLMEngine, request: models.RequestInfo):
         regex_hash = hashlib.sha256(regex_string.encode()).hexdigest()
         # Check if the logits processor for the regex already exists in the cache
         if regex_hash in logits_processor_cache:
+            logging.info(f"Using cached logits processor for regex: {regex_string}")
             logits_processors = [logits_processor_cache[regex_hash]]
         else:
+            logging.info(f"Compiling logits processor for regex: {regex_string}")
             # Compile the logits processor and store it in the cache
             logits_processor = RegexLogitsProcessor(regex_string, engine.model.engine)
             logits_processor_cache[regex_hash] = logits_processor
             logits_processors = [logits_processor]
     else:
+        logging.info(f"No logits processor specified")
         logits_processors = []
 
     return logits_processors
