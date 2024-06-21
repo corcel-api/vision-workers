@@ -94,15 +94,40 @@ def fix_message_structure_for_prompt(
     logging.debug(f"Processed messages: {processed_messages}")
     return processed_messages
 
+import hashlib
+
+# Dictionary to store the compiled logits processors
+logits_processor_cache = {}
+
 def add_logits_processor(engine: models.LLMEngine, request: models.RequestInfo):
     json_schema = request.json_schema
-    regex_string = request.regex    
+    regex_string = request.regex
+
     if json_schema is not None:
-        logits_processors = [JSONLogitsProcessor(json_schema, engine.model.engine)]
+        # Generate a hash of the JSON schema
+        json_hash = hashlib.sha256(json_schema.encode()).hexdigest()
+        # Check if the logits processor for the JSON schema already exists in the cache
+        if json_hash in logits_processor_cache:
+            logits_processors = [logits_processor_cache[json_hash]]
+        else:
+            # Compile the logits processor and store it in the cache
+            logits_processor = JSONLogitsProcessor(json_schema, engine.model.engine)
+            logits_processor_cache[json_hash] = logits_processor
+            logits_processors = [logits_processor]
     elif regex_string is not None:
-        logits_processors = [RegexLogitsProcessor(regex_string, engine.model.engine)]
+        # Generate a hash of the regex string
+        regex_hash = hashlib.sha256(regex_string.encode()).hexdigest()
+        # Check if the logits processor for the regex already exists in the cache
+        if regex_hash in logits_processor_cache:
+            logits_processors = [logits_processor_cache[regex_hash]]
+        else:
+            # Compile the logits processor and store it in the cache
+            logits_processor = RegexLogitsProcessor(regex_string, engine.model.engine)
+            logits_processor_cache[regex_hash] = logits_processor
+            logits_processors = [logits_processor]
     else:
         logits_processors = []
+
     return logits_processors
 
 async def complete_vllm(
@@ -114,7 +139,7 @@ async def complete_vllm(
     seed = request_info.seed
     number_of_logprobs = request_info.number_of_logprobs
     starting_assistant_message = request_info.starting_assistant_message
-    top_k = 5  # 5 is the maximum that vllm allows for logprobs, so we must use this
+    top_k = 1  # 5 is the maximum that vllm allows for logprobs, so we must use this
     top_p = request_info.top_p
 
     if not top_p != 0:
