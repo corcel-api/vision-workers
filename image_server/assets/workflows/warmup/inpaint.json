@@ -10,21 +10,104 @@
       "title": "Shared Checkpoint Loader (Inspire)"
     }
   },
-  "69": {
+  "77": {
     "inputs": {
-      "image": "init.png",
-      "upload": "image"
+      "samples": [
+        "Sampler",
+        0
+      ],
+      "vae": [
+        "60",
+        2
+      ]
     },
-    "class_type": "LoadImage",
+    "class_type": "VAEDecode",
     "_meta": {
-      "title": "Load Image"
+      "title": "VAE Decode"
+    }
+  },
+  "107": {
+    "inputs": {
+      "grow_mask_by": 30,
+      "pixels": [
+        "Image_loader",
+        0
+      ],
+      "vae": [
+        "60",
+        2
+      ],
+      "mask": [
+        "Mask_loader",
+        0
+      ]
+    },
+    "class_type": "VAEEncodeForInpaint",
+    "_meta": {
+      "title": "VAE Encode (for Inpainting)"
+    }
+  },
+  "112": {
+    "inputs": {
+      "images": [
+        "77",
+        0
+      ]
+    },
+    "class_type": "PreviewImage",
+    "_meta": {
+      "title": "Preview Image"
+    }
+  },
+  "Image_loader": {
+    "inputs": {
+      "image": ""
+    },
+    "class_type": "ETN_LoadImageBase64",
+    "_meta": {
+      "title": "Load Image (Base64)"
+    }
+  },
+  "Mask_loader": {
+    "inputs": {
+      "mask": ""
+    },
+    "class_type": "ETN_LoadMaskBase64",
+    "_meta": {
+      "title": "Load Mask (Base64)"
+    }
+  },
+  "Prompt": {
+    "inputs": {
+      "text": "a lion, high quality, hd",
+      "clip": [
+        "60",
+        1
+      ]
+    },
+    "class_type": "CLIPTextEncode",
+    "_meta": {
+      "title": "CLIP Text Encode (Prompt)"
+    }
+  },
+  "Negative_prompt": {
+    "inputs": {
+      "text": "embedding:negativeXL_A , blurry, lowres",
+      "clip": [
+        "60",
+        1
+      ]
+    },
+    "class_type": "CLIPTextEncode",
+    "_meta": {
+      "title": "CLIP Text Encode (Prompt)"
     }
   },
   "Sampler": {
     "inputs": {
       "add_noise": "enable",
-      "noise_seed": 685652545380498,
-      "steps": 20,
+      "noise_seed": 832226232568812,
+      "steps": 1,
       "cfg": 4,
       "sampler_name": "dpmpp_3m_sde_gpu",
       "scheduler": "karras",
@@ -51,92 +134,6 @@
     "class_type": "KSamplerAdvanced",
     "_meta": {
       "title": "KSampler (Advanced)"
-    }
-  },
-  "Prompt": {
-    "inputs": {
-      "text": "a lion wearing a joker hat",
-      "clip": [
-        "60",
-        1
-      ]
-    },
-    "class_type": "CLIPTextEncode",
-    "_meta": {
-      "title": "CLIP Text Encode (Prompt)"
-    }
-  },
-  "Negative_prompt": {
-    "inputs": {
-      "text": "low quality",
-      "clip": [
-        "60",
-        1
-      ]
-    },
-    "class_type": "CLIPTextEncode",
-    "_meta": {
-      "title": "CLIP Text Encode (Prompt)"
-    }
-  },
-  "77": {
-    "inputs": {
-      "samples": [
-        "Sampler",
-        0
-      ],
-      "vae": [
-        "60",
-        2
-      ]
-    },
-    "class_type": "VAEDecode",
-    "_meta": {
-      "title": "VAE Decode"
-    }
-  },
-  "78": {
-    "inputs": {
-      "images": [
-        "77",
-        0
-      ]
-    },
-    "class_type": "PreviewImage",
-    "_meta": {
-      "title": "Preview Image"
-    }
-  },
-  "107": {
-    "inputs": {
-      "grow_mask_by": 15,
-      "pixels": [
-        "69",
-        0
-      ],
-      "vae": [
-        "60",
-        2
-      ],
-      "mask": [
-        "114",
-        0
-      ]
-    },
-    "class_type": "VAEEncodeForInpaint",
-    "_meta": {
-      "title": "VAE Encode (for Inpainting)"
-    }
-  },
-  "114": {
-    "inputs": {
-      "image": "mask.png",
-      "channel": "red",
-      "upload": "image"
-    },
-    "class_type": "LoadImageMask",
-    "_meta": {
-      "title": "Load Image (as Mask)"
     }
   }
 }
