@@ -23,6 +23,7 @@ async def _get_vllm_engine(
         model=model_name,
         tokenizer=tokenizer_name,
         dtype=dtype,
+        enable_prefix_caching=True,
         enforce_eager=False,
         max_logprobs=10,
         revision=revision,
